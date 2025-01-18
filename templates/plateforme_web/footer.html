@@ -1,0 +1,68 @@
+<footer class="bg-gray-900 text-white">
+    <div class="max-w-7xl mx-auto px-6 py-12 lg:px-8">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-4">
+            <div>
+                <h3 class="text-lg font-semibold mb-4">SOUSCRIPTION SONATUR</h3>
+                <p class="text-gray-400">
+                    La Société Nationale d'Aménagement des Terrains Urbains, votre partenaire de confiance pour l'accès à la propriété foncière.
+                </p>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Liens rapides</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'plateforme_web:index' %}#apropos" class="text-gray-400 hover:text-white transition-colors">
+                            À propos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'plateforme_web:index' %}#comment-souscrire" class="text-gray-400 hover:text-white transition-colors">
+                            Comment souscrire
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'plateforme_web:index' %}#pourquoi-nous" class="text-gray-400 hover:text-white transition-colors">
+                            Pourquoi nous choisir
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'plateforme_web:index' %}#contact" class="text-gray-400 hover:text-white transition-colors">
+                            Contact
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                <ul class="space-y-2 text-gray-400">
+                    <li>Tél: +226 25 30 17 73</li>
+                    <li>Email: sonatur@sonatur.bf</li>
+                    <li>Avenue Kwame Nkrumah</li>
+                    <li>Koulouba, Ouagadougou</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Suivez-nous</h3>
+                <p class="text-gray-400 mb-4">Abonnez-vous à notre page Facebook pour suivre toutes nos actualités</p>
+                <div class="flex space-x-4">
+                    <a href="https://www.facebook.com/sonatur.bf" 
+                       class="text-gray-400 hover:text-white transition-colors"
+                       aria-label="Facebook"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+            <p>&copy; {% now "Y" %} SONATUR. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>

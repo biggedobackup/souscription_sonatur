@@ -1,0 +1,8 @@
+le blocage et deblocage dois etre du temps reel sur tout les pc
+
+-----------------------------------------------------------------------------------
+
+@timer_component.html @etape6_paiement.html  le compte a rebourd dois etre mis en sychro avec la date et l'heure actuel comme si s'l est 10:10 et et la timer est 20min donc a 10:30 la parcelle dois etre debloquer meme si le user n'est plus sur le site , parce que actuellement avec cette approhce actuel quand il bloque la parcele et sort du site la parcelle reste bloquer parce qu'il n'etais plus la lors du temps terminer pour cliquer sur recommencer 
+donc je veux que sa soit synchro avec l'heure mainteannt meme deh que l'heure arrive la aprcelle se debloque @views.py 
+
+debloquer parcelle automatiquement avec theard , celery ou cron 

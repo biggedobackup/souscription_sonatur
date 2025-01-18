@@ -1,0 +1,1039 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Opérations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    {% include 'tableau_administration/header.html' %}
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des Opérations</h1>
+            <button onclick="openAddModal()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                Ajouter une opération
+            </button>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="mb-6 max-w-md">
+            <form method="GET" class="flex gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               placeholder="Rechercher une opération..." 
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 pl-7 text-sm">
+                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" 
+                        class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-search"></i>
+                    Rechercher
+                </button>
+                {% if search_query %}
+                <a href="{% url 'tableau_administration:liste_operations' %}" 
+                   class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-times"></i>
+                    Réinitialiser
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if messages %}
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4">
+            {% for message in messages %}
+            <div class="toast-message transform transition-all duration-300 ease-out translate-x-0 opacity-100 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 
+                    {% if message.tags == 'success' %}text-green-500 bg-green-100
+                    {% elif message.tags == 'error' %}text-red-500 bg-red-100
+                    {% else %}text-blue-500 bg-blue-100{% endif %}
+                    rounded-lg">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation"></i>
+                    {% else %}
+                        <i class="fas fa-info"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tableau des opérations -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intitulé</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projet</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date début</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date fin</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponible</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for operation in operations %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ operation.code }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ operation.intitule }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ operation.projet.libelle }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ operation.date_debut_operation|date:"d/m/Y H:i" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ operation.date_fin_operation|date:"d/m/Y H:i"|default:"-" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ operation.montant_souscription|intcomma }} FCFA</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if operation.disponible %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ operation.disponible|yesno:"Oui,Non" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if operation.actif %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ operation.actif|yesno:"Actif,Inactif" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button data-action="edit"
+                                            data-operation="{{ operation.id }}"
+                                            data-code="{{ operation.code }}"
+                                            data-intitule="{{ operation.intitule }}"
+                                            data-projet="{{ operation.projet.id }}"
+                                            data-date-debut="{{ operation.date_debut_operation|date:'Y-m-d' }}"
+                                            data-date-fin="{{ operation.date_fin_operation|date:'Y-m-d' }}"
+                                            data-duree-depot="{{ operation.duree_depot_physique }}"
+                                            data-duree-souscription="{{ operation.duree_souscription }}"
+                                            data-montant="{{ operation.montant_souscription }}"
+                                            data-types-souscripteurs-ids="{% for type in operation.types_souscripteurs.all %}{{ type.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            data-types-parcelles-ids="{% for type in operation.types_parcelles.all %}{{ type.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            data-processus-attributions-ids="{% for proc in operation.processus_attributions.all %}{{ proc.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            data-comptes-bancaires-ids="{% for compte in operation.comptes_bancaires.all %}{{ compte.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            data-condition-code="{{ operation.condition.code|default:'' }}"
+                                            data-condition-intitule="{{ operation.condition.intitule|default:'' }}"
+                                            data-condition-souscription="{{ operation.condition.condition_souscription|default:'' }}"
+                                            data-methode-attribution="{{ operation.condition.methode_attribution|default:'' }}"
+                                            data-documents-requis="{{ operation.condition.documents_requis|default:'' }}"
+                                            data-disponible="{{ operation.disponible|yesno:'true,false' }}"
+                                            data-actif="{{ operation.actif|yesno:'true,false' }}"
+                                            data-visuel="{% if operation.visuel %}{{ operation.visuel.url }}{% endif %}"
+                                            data-description="{{ operation.description|default:'Non spécifié' }}"
+                                            data-positions-parcelles-ids="{% for position in operation.positions_parcelles.all %}{{ position.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            class="flex items-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-sm hover:bg-indigo-200">
+                                        <i class="fas fa-edit mr-1"></i>
+                                        <span class="text-xs">Éditer</span>
+                                    </button>
+                                    
+                                    <button data-action="view"
+                                            data-operation="{{ operation.id }}"
+                                            data-code="{{ operation.code }}"
+                                            data-intitule="{{ operation.intitule }}"
+                                            data-projet-nom="{{ operation.projet.libelle }}"
+                                            data-date-debut="{{ operation.date_debut_operation|date:'d/m/Y' }}"
+                                            data-date-fin="{{ operation.date_fin_operation|date:'d/m/Y' }}"
+                                            data-duree-depot="{{ operation.duree_depot_physique }}"
+                                            data-duree-souscription="{{ operation.duree_souscription }}"
+                                            data-montant="{{ operation.montant_souscription }}"
+                                            data-types-souscripteurs="{{ operation.types_souscripteurs.all|join:', ' }}"
+                                            data-types-parcelles="{{ operation.types_parcelles.all|join:', ' }}"
+                                            data-processus-attributions="{{ operation.processus_attributions.all|join:', ' }}"
+                                            data-comptes-bancaires="{{ operation.comptes_bancaires.all|join:', ' }}"
+                                            data-condition-code="{{ operation.condition.code|default:'' }}"
+                                            data-condition-intitule="{{ operation.condition.intitule|default:'' }}"
+                                            data-condition-souscription="{{ operation.condition.condition_souscription|default:'' }}"
+                                            data-methode-attribution="{{ operation.condition.methode_attribution|default:'' }}"
+                                            data-documents-requis="{{ operation.condition.documents_requis|default:'' }}"
+                                            data-disponible="{{ operation.disponible|yesno:'true,false' }}"
+                                            data-actif="{{ operation.actif|yesno:'true,false' }}"
+                                            data-visuel="{% if operation.visuel %}{{ operation.visuel.url }}{% endif %}"
+                                            data-description="{{ operation.description|default:'Non spécifié' }}"
+                                            data-positions-parcelles-ids="{% for position in operation.positions_parcelles.all %}{{ position.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                            class="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-sm hover:bg-blue-200">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        <span class="text-xs">Voir</span>
+                                    </button>
+                                    
+                                    <button data-action="delete"
+                                            data-operation="{{ operation.id }}"
+                                            data-intitule="{{ operation.intitule }}"
+                                            class="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-sm hover:bg-red-200">
+                                        <i class="fas fa-trash mr-1"></i>
+                                        <span class="text-xs">Supprimer</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Affichage de {{ operations.start_index }} à {{ operations.end_index }} sur {{ operations.paginator.count }} opérations
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if operations.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ operations.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700">
+                    Page {{ operations.number }} sur {{ operations.paginator.num_pages }}
+                </span>
+
+                {% if operations.has_next %}
+                    <a href="?page={{ operations.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ operations.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Modales (Ajout, Édition, Suppression) -->
+        <!-- Modal Ajout -->
+        <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-6 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-xl font-medium text-gray-900 mb-6">Ajouter une opération</h3>
+                    <form id="addForm" method="POST" action="{% url 'tableau_administration:ajouter_operation' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <input type="text" name="code" required 
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Intitulé</label>
+                                <input type="text" name="intitule" required 
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Projet</label>
+                                <select name="projet" required 
+                                        class="w-full px-3 py-2 border rounded-md">
+                                    <option value="">Sélectionnez un projet</option>
+                                    {% for projet in projets %}
+                                        <option value="{{ projet.id }}">{{ projet.libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                                <input type="date" name="date_debut_operation" required
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                                <input type="date" name="date_fin_operation"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Montant souscription (FCFA)</label>
+                                <input type="number" name="montant_souscription" min="0" step="1"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Durée dépôt physique (jours)</label>
+                                <input type="number" name="duree_depot_physique" min="0"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Durée souscription (minutes)</label>
+                                <input type="number" name="duree_souscription" min="0"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Visuel</label>
+                                <input type="file" name="visuel"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            
+                        </div>
+                        <div class="grid grid-cols-1 gap-6">
+                        <div class="mb-12">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea name="description" rows="3"
+                                      class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
+                        </div>
+
+
+                        <div class="mt-6">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Types de souscripteurs</label>
+                                    <select name="types_souscripteurs" multiple
+                                            class="w-full px-3 py-2 border rounded-md">
+                                        {% for type in types_souscripteurs %}
+                                            <option value="{{ type.id }}">{{ type.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Types de parcelles</label>
+                                    <select name="types_parcelles" multiple
+                                            class="w-full px-3 py-2 border rounded-md">
+                                        {% for type in types_parcelles %}
+                                            <option value="{{ type.id }}">{{ type.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Processus d'attribution</label>
+                                    <select name="processus_attributions" multiple
+                                            class="w-full px-3 py-2 border rounded-md">
+                                        {% for processus in processus_attributions %}
+                                            <option value="{{ processus.id }}">{{ processus.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Comptes bancaires</label>
+                                    <select name="comptes_bancaires" multiple
+                                            class="w-full px-3 py-2 border rounded-md">
+                                        {% for compte in comptes_bancaires %}
+                                            <option value="{{ compte.id }}">{{ compte.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="mt-4">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="disponible" class="form-checkbox h-5 w-5 text-green-600">
+                                <span class="ml-2 text-gray-700">Rendre disponible</span>
+                            </label>
+                        </div>
+
+                        <div class="mt-6">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Conditions</h4>
+                            <div class="grid grid-cols-2 gap-6 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Code condition</label>
+                                    <input type="text" name="condition_code"
+                                           class="w-full px-3 py-2 border rounded-md">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Intitulé condition</label>
+                                    <input type="text" name="condition_intitule"
+                                           class="w-full px-3 py-2 border rounded-md">
+                                </div>
+                            </div>
+                            
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Documents requis</label>
+                            <textarea name="documents_requis" rows="3"
+                                      class="w-full px-3 py-2 border rounded-md"></textarea>
+                        </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Conditions de souscription</label>
+                                <textarea name="condition_souscription" rows="3"
+                                          class="w-full px-3 py-2 border rounded-md"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Méthode d'attribution</label>
+                                <textarea name="methode_attribution" rows="3"
+                                          class="w-full px-3 py-2 border rounded-md"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Importer des parcelles</label>
+                            <input type="file" name="fichier_parcelles"
+                                   accept=".xlsx,.xls"
+                                   class="w-full px-3 py-2 border rounded-md">
+                            <p class="mt-1 text-sm text-gray-500">
+                                Le fichier Excel doit contenir les colonnes suivantes : code, site, zone, section, position, 
+                                lot, parcelle, usage, surface, cout_m2, acompte
+                            </p>
+                        </div>
+
+                        <div class="mt-5 flex justify-end gap-4">
+                            <button type="button" onclick="closeAddModal()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Annuler
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Ajouter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Édition -->
+        <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-6 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-xl font-medium text-gray-900 mb-6">Modifier une opération</h3>
+                    <form id="editForm" method="POST" action="{% url 'tableau_administration:modifier_operation' 0 %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Informations principales -->
+                        <div class="grid grid-cols-3 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <input type="text" name="code" id="edit_code" required 
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Intitulé</label>
+                                <input type="text" name="intitule" id="edit_intitule" required 
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Projet</label>
+                                <select name="projet" id="edit_projet" required 
+                                        class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                    <option value="">Sélectionnez un projet</option>
+                                    {% for projet in projets %}
+                                        <option value="{{ projet.id }}">{{ projet.libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea name="description" id="edit_description" rows="3"
+                                      class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
+                        <!-- Dates et durées -->
+                        <div class="grid grid-cols-3 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                                <input type="date" name="date_debut_operation" id="edit_date_debut" required
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                                <input type="date" name="date_fin_operation" id="edit_date_fin"
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Montant souscription (FCFA)</label>
+                                <input type="number" name="montant_souscription" id="edit_montant" min="0"
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+
+                        <!-- Durées -->
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Durée dépôt physique (jours)</label>
+                                <input type="number" name="duree_depot_physique" id="edit_duree_depot" min="0"
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Durée souscription (minutes)</label>
+                                <input type="number" name="duree_souscription" id="edit_duree_souscription" min="0"
+                                       class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+
+                        <!-- Types -->
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Types de souscripteurs</label>
+                                <select name="types_souscripteurs" id="edit_types_souscripteurs" multiple
+                                        class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                    {% for type in types_souscripteurs %}
+                                        <option value="{{ type.id }}">{{ type.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Types de parcelles</label>
+                                <select name="types_parcelles" id="edit_types_parcelles" multiple
+                                        class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                    {% for type in types_parcelles %}
+                                        <option value="{{ type.id }}">{{ type.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Positions de parcelles -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Positions de parcelles</label>
+                            <select name="positions_parcelles" id="edit_positions_parcelles" multiple
+                                    class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                {% for position in positions_parcelles %}
+                                    <option value="{{ position.id }}">{{ position.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Processus et comptes -->
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Processus d'attribution</label>
+                                <select name="processus_attributions" id="edit_processus_attributions" multiple
+                                        class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                    {% for processus in processus_attributions %}
+                                        <option value="{{ processus.id }}">{{ processus.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Comptes bancaires</label>
+                                <select name="comptes_bancaires" id="edit_comptes_bancaires" multiple
+                                        class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                    {% for compte in comptes_bancaires %}
+                                        <option value="{{ compte.id }}">{{ compte.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Condition -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Condition</h4>
+                            <div class="grid grid-cols-2 gap-6 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Code condition</label>
+                                    <input type="text" name="condition_code" id="edit_condition_code"
+                                           class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Intitulé condition</label>
+                                    <input type="text" name="condition_intitule" id="edit_condition_intitule"
+                                           class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Conditions de souscription</label>
+                                <textarea name="condition_souscription" id="edit_condition_souscription" rows="3"
+                                          class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Méthode d'attribution</label>
+                                <textarea name="methode_attribution" id="edit_methode_attribution" rows="3"
+                                          class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Documents requis</label>
+                                <textarea name="documents_requis" id="edit_documents_requis" rows="3"
+                                          class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Statuts -->
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="disponible" id="edit_disponible"
+                                           class="form-checkbox h-5 w-5 text-green-600">
+                                    <span class="ml-2 text-gray-700">Disponible</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="is_active" id="edit_actif"
+                                           class="form-checkbox h-5 w-5 text-green-600">
+                                    <span class="ml-2 text-gray-700">Actif</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Visuel -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Visuel</label>
+                            <input type="file" name="visuel" id="edit_visuel"
+                                   class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-500">
+                            <div id="current_visuel" class="mt-2"></div>
+                        </div>
+
+                        <div class="mt-5 flex justify-end gap-4">
+                            <button type="button" onclick="closeEditModal()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Annuler
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Suppression -->
+        <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer une opération</h3>
+                    <p class="text-gray-600">Êtes-vous sûr de vouloir supprimer l'opération <span id="delete_operation_name" class="font-semibold"></span> ?</p>
+                    <div class="mt-5 flex justify-end gap-4">
+                        <button onclick="closeDeleteModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Annuler
+                        </button>
+                        <button onclick="confirmDelete()" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Vue -->
+        <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-6 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-xl font-medium text-gray-900 mb-6">Détails de l'opération</h3>
+                    
+                    <!-- Informations principales -->
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                            <p id="view_code" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Intitulé</label>
+                            <p id="view_intitule" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Projet</label>
+                            <p id="view_projet" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <p id="view_description" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                    <!-- Dates et durées -->
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                            <p id="view_date_debut" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                            <p id="view_date_fin" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Montant souscription</label>
+                            <p id="view_montant" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        </div>
+
+                    <!-- Durées -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Durée dépôt physique</label>
+                            <p id="view_duree_depot" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Durée souscription</label>
+                            <p id="view_duree_souscription" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                    </div>
+
+                    <!-- Types -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Types de souscripteurs</label>
+                            <p id="view_types_souscripteurs" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Types de parcelles</label>
+                            <p id="view_types_parcelles" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                    </div>
+
+                    <!-- Positions de parcelles -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Positions de parcelles</label>
+                        <p id="view_positions" class="text-sm text-gray-900 bg-gray-50 p-2 rounded min-h-[40px]"></p>
+                    </div>
+
+                    <!-- Processus et comptes -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Processus d'attribution</label>
+                            <p id="view_processus" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Comptes bancaires</label>
+                            <p id="view_comptes" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                    </div>
+
+                    <!-- Condition -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-medium text-gray-900 mb-4">Condition</h4>
+                        <div class="grid grid-cols-2 gap-6 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code condition</label>
+                                <p id="view_condition_code" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Intitulé condition</label>
+                                <p id="view_condition_intitule" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Conditions de souscription</label>
+                            <p id="view_condition_souscription" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Méthode d'attribution</label>
+                            <p id="view_methode_attribution" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Documents requis</label>
+                            <p id="view_documents_requis" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                    </div>
+
+                    <!-- Statuts -->
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Disponible</label>
+                            <p id="view_disponible" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                            <p id="view_actif" class="text-sm text-gray-900 bg-gray-50 p-2 rounded"></p>
+                        </div>
+                    </div>
+
+                    <!-- Visuel -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Visuel</label>
+                        <div id="view_visuel" class="w-48 h-48 bg-gray-50 rounded flex items-center justify-center">
+                            <img id="view_visuel_img" src="" alt="Visuel de l'opération" class="max-w-full max-h-full object-contain hidden">
+                            <span id="view_visuel_placeholder" class="text-gray-400">Aucun visuel</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex justify-end">
+                        <button onclick="closeViewModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Script JavaScript -->
+        <script>
+            let currentOperationId = null;
+
+            function openAddModal() {
+                document.getElementById('addModal').classList.remove('hidden');
+            }
+
+            function closeAddModal() {
+                document.getElementById('addModal').classList.add('hidden');
+            }
+
+            function openEditModal(button) {
+                // Récupération des données du bouton
+                const operationId = button.dataset.operation;
+                const form = document.getElementById('editForm');
+                
+                // Mise à jour de l'action du formulaire avec l'ID de l'opération
+                form.action = form.action.replace('/0/', `/${operationId}/`);
+                
+                // Remplissage des champs du formulaire
+                document.getElementById('edit_code').value = button.dataset.code;
+                document.getElementById('edit_intitule').value = button.dataset.intitule;
+                document.getElementById('edit_projet').value = button.dataset.projet;
+                document.getElementById('edit_date_debut').value = button.dataset.dateDebut;
+                document.getElementById('edit_date_fin').value = button.dataset.dateFin;
+                document.getElementById('edit_montant').value = button.dataset.montant;
+                document.getElementById('edit_duree_depot').value = button.dataset.dureeDepot;
+                document.getElementById('edit_duree_souscription').value = button.dataset.dureeSouscription;
+                document.getElementById('edit_description').value = button.dataset.description || '';
+                
+                // Mise à jour des sélections multiples avec les IDs
+                if (button.dataset.typesSouscripteursIds) {
+                    const typesSouscripteursIds = button.dataset.typesSouscripteursIds.split(',');
+                    const select = document.getElementById('edit_types_souscripteurs');
+                    if (select.tomselect) {
+                        select.tomselect.setValue(typesSouscripteursIds);
+                    }
+                }
+                
+                if (button.dataset.typesParcellesIds) {
+                    const typesParcellesIds = button.dataset.typesParcellesIds.split(',');
+                    const select = document.getElementById('edit_types_parcelles');
+                    if (select.tomselect) {
+                        select.tomselect.setValue(typesParcellesIds);
+                    }
+                }
+                
+                if (button.dataset.processusAttributionsIds) {
+                    const processusIds = button.dataset.processusAttributionsIds.split(',');
+                    const select = document.getElementById('edit_processus_attributions');
+                    if (select.tomselect) {
+                        select.tomselect.setValue(processusIds);
+                    }
+                }
+                
+                if (button.dataset.comptesBancairesIds) {
+                    const comptesIds = button.dataset.comptesBancairesIds.split(',');
+                    const select = document.getElementById('edit_comptes_bancaires');
+                    if (select.tomselect) {
+                        select.tomselect.setValue(comptesIds);
+                    }
+                }
+                
+                // Remplissage des champs de condition
+                document.getElementById('edit_condition_code').value = button.dataset.conditionCode || '';
+                document.getElementById('edit_condition_intitule').value = button.dataset.conditionIntitule || '';
+                document.getElementById('edit_condition_souscription').value = button.dataset.conditionSouscription || '';
+                document.getElementById('edit_methode_attribution').value = button.dataset.methodeAttribution || '';
+                document.getElementById('edit_documents_requis').value = button.dataset.documentsRequis || '';
+                
+                // Gestion des checkboxes
+                document.getElementById('edit_disponible').checked = button.dataset.disponible === 'true';
+                document.getElementById('edit_actif').checked = button.dataset.actif === 'true';
+                
+                // Affichage du visuel actuel
+                const currentVisuel = document.getElementById('current_visuel');
+                if (button.dataset.visuel) {
+                    currentVisuel.innerHTML = `<img src="${button.dataset.visuel}" alt="Visuel actuel" class="h-20 object-contain">`;
+                } else {
+                    currentVisuel.innerHTML = '<span class="text-gray-500">Aucun visuel</span>';
+                }
+                
+                // Afficher le modal
+                document.getElementById('editModal').classList.remove('hidden');
+
+                // Mise à jour des sélections multiples avec les IDs
+                if (button.dataset.positionsParcellesIds) {
+                    const positionsIds = button.dataset.positionsParcellesIds.split(',');
+                    const select = document.getElementById('edit_positions_parcelles');
+                    if (select.tomselect) {
+                        select.tomselect.setValue(positionsIds);
+                    }
+                }
+            }
+
+            function closeEditModal() {
+                document.getElementById('editModal').classList.add('hidden');
+                document.getElementById('editForm').reset();
+            }
+
+            function openDeleteModal(data) {
+                currentOperationId = data.operation;
+                document.getElementById('delete_operation_name').textContent = data.intitule;
+                document.getElementById('deleteModal').classList.remove('hidden');
+            }
+
+            function closeDeleteModal() {
+                document.getElementById('deleteModal').classList.add('hidden');
+            }
+
+            function confirmDelete() {
+                if (currentOperationId) {
+                    window.location.href = `{% url 'tableau_administration:supprimer_operation' 0 %}`.replace('0', currentOperationId);
+                }
+            }
+
+            function openViewModal(data) {
+                // Informations principales
+                document.getElementById('view_code').textContent = data.code || 'Non spécifié';
+                document.getElementById('view_intitule').textContent = data.intitule || 'Non spécifié';
+                document.getElementById('view_projet').textContent = data.projetNom || 'Non spécifié';
+                
+                // Dates et montant
+                document.getElementById('view_date_debut').textContent = data.dateDebut || 'Non spécifié';
+                document.getElementById('view_date_fin').textContent = data.dateFin || 'Non spécifié';
+                document.getElementById('view_montant').textContent = (data.montant ? data.montant + ' FCFA' : 'Non spécifié');
+                
+                // Durées
+                document.getElementById('view_duree_depot').textContent = (data.dureeDepot ? data.dureeDepot + ' jours' : 'Non spécifié');
+                document.getElementById('view_duree_souscription').textContent = (data.dureeSouscription ? data.dureeSouscription + ' minutes' : 'Non spécifié');
+                
+                // Types
+                document.getElementById('view_types_souscripteurs').textContent = data.typesSouscripteurs || 'Non spécifié';
+                document.getElementById('view_types_parcelles').textContent = data.typesParcelles || 'Non spécifié';
+                
+                // Processus et comptes
+                document.getElementById('view_processus').textContent = data.processusAttributions || 'Non spécifié';
+                document.getElementById('view_comptes').textContent = data.comptesBancaires || 'Non spécifié';
+                
+                // Condition
+                document.getElementById('view_condition_code').textContent = data.conditionCode || 'Non spécifié';
+                document.getElementById('view_condition_intitule').textContent = data.conditionIntitule || 'Non spécifié';
+                document.getElementById('view_condition_souscription').textContent = data.conditionSouscription || 'Non spécifié';
+                document.getElementById('view_methode_attribution').textContent = data.methodeAttribution || 'Non spécifié';
+                document.getElementById('view_documents_requis').textContent = data.documentsRequis || 'Non spécifié';
+                
+                // Statuts
+                document.getElementById('view_disponible').textContent = data.disponible === 'true' ? 'Oui' : 'Non';
+                document.getElementById('view_actif').textContent = data.actif === 'true' ? 'Actif' : 'Inactif';
+                
+                // Visuel - Gestion améliorée
+                const visuelImg = document.getElementById('view_visuel_img');
+                const visuelPlaceholder = document.getElementById('view_visuel_placeholder');
+                const visuelContainer = document.getElementById('view_visuel');
+                
+                if (data.visuel && data.visuel !== "") {
+                    visuelImg.src = data.visuel;
+                    visuelImg.classList.remove('hidden');
+                    visuelPlaceholder.classList.add('hidden');
+                    visuelContainer.classList.remove('hidden');
+                } else {
+                    visuelImg.src = "";
+                    visuelImg.classList.add('hidden');
+                    visuelPlaceholder.classList.remove('hidden');
+                    visuelContainer.classList.remove('hidden');
+                }
+                
+                document.getElementById('view_description').textContent = data.description || 'Non spécifié';
+                
+                // Affichage des positions
+                const positionsElement = document.getElementById('view_positions');
+                if (data.positionsParcellesIds) {
+                    const positions = data.positionsParcellesIds.split(',').map(id => {
+                        const option = document.querySelector(`#edit_positions_parcelles option[value="${id}"]`);
+                        return option ? option.textContent : '';
+                    }).filter(Boolean);
+                    positionsElement.textContent = positions.join(', ') || 'Aucune position';
+                } else {
+                    positionsElement.innerHTML = '<span class="text-gray-400">Aucune position</span>';
+                }
+                
+                document.getElementById('viewModal').classList.remove('hidden');
+            }
+
+            function closeViewModal() {
+                document.getElementById('viewModal').classList.add('hidden');
+            }
+
+            // Gestion des clics sur les boutons d'action
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                
+                switch(action) {
+                    case 'edit':
+                        openEditModal(button);
+                        break;
+                    case 'view':
+                        openViewModal(button.dataset);
+                        break;
+                    case 'delete':
+                        openDeleteModal({
+                            operation: button.dataset.operation,
+                            intitule: button.dataset.intitule
+                        });
+                        break;
+                }
+            });
+
+            // Fermeture des modaux en cliquant en dehors
+            window.onclick = function(event) {
+                const modals = [
+                    document.getElementById('addModal'),
+                    document.getElementById('editModal'),
+                    document.getElementById('viewModal'),
+                    document.getElementById('deleteModal')
+                ];
+                
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Gestion des messages toast
+            document.addEventListener('DOMContentLoaded', function() {
+                const toasts = document.querySelectorAll('.toast-message');
+                
+                toasts.forEach(toast => {
+                    setTimeout(() => {
+                        toast.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 300);
+                    }, 5000);
+                });
+            });
+
+            // Initialisation des select2 pour les sélections multiples
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialiser Select2 pour tous les select multiples
+                const multiSelects = document.querySelectorAll('select[multiple]');
+                multiSelects.forEach(select => {
+                    new TomSelect(select, {
+                        plugins: ['remove_button'],
+                        maxItems: null,
+                        placeholder: 'Sélectionner...',
+                        allowEmptyOption: true
+                    });
+                });
+            });
+        </script>
+    </main>
+
+    {% include 'tableau_administration/footer.html' %}
+
+    <!-- Inclusion de TomSelect pour les sélections multiples -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<div x-show="etape === 6" 
+     x-init="
+        // Récupération de toutes les données du localStorage
+        if (!souscriptionData.operation) {
+            souscriptionData.operation = JSON.parse(localStorage.getItem('operation'));
+        }
+        if (!souscriptionData.conditions) {
+            souscriptionData.conditions = JSON.parse(localStorage.getItem('conditions'));
+        }
+        if (!souscriptionData.identification) {
+            souscriptionData.identification = JSON.parse(localStorage.getItem('identification'));
+        }
+        if (!souscriptionData.typeParcelle) {
+            souscriptionData.typeParcelle = JSON.parse(localStorage.getItem('typeParcelle'));
+        }
+        if (!souscriptionData.parcelle) {
+            souscriptionData.parcelle = JSON.parse(localStorage.getItem('parcelleChoisie'));
+        }
+     "
+     class="max-w-2xl mx-auto">
+
+    <!-- Modal de timeout intégré -->
+    <div x-data="{ 
+            showTimeoutModal: false,
+            debloquerParcelle() {
+                const parcelleData = JSON.parse(localStorage.getItem('parcelleChoisie'));
+                if (parcelleData && parcelleData.id) {
+                    fetch(`/debloquer_parcelle/${parcelleData.id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log('Parcelle débloquée automatiquement');
+                        }
+                    }).catch(error => {
+                        console.error('Erreur lors du déblocage:', error);
+                    });
+                }
+            }
+        }"
+        x-show="showTimeoutModal"
+        @show-timeout-modal.window="showTimeoutModal = true; debloquerParcelle()"
+        @hide-timeout-modal.window="showTimeoutModal = false"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">Temps écoulé !</h3>
+            <p class="text-gray-600 mb-6">Votre session a expiré. Vous allez être redirigé vers le début de la souscription.</p>
+            <button @click="localStorage.clear(); window.location.href = '/souscrire'"
+                    class="w-full sonatur-green sonatur-green-hover text-white py-2 px-4 rounded-lg">
+                Recommencer
+            </button>
+        </div>
+    </div>
+
+    <h2 class="text-2xl font-bold mb-6">Récapitulatif de votre souscription</h2>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="space-y-6">
+            <!-- Opération et Projet -->
+            <div class="border-b pb-4">
+                <h4 class="font-semibold text-lg mb-2">Opération et Projet</h4>
+                <p class="text-gray-600">Opération: <span x-text="souscriptionData.operation?.intitule"></span></p>
+                <p class="text-gray-600">Localité: <span x-text="souscriptionData.operation?.localite"></span></p>
+            </div>
+
+
+            <!-- Informations du souscripteur -->
+            <div class="border-b pb-4">
+                <h4 class="font-semibold text-lg mb-2">Informations du souscripteur</h4>
+                
+                <!-- Pour personne physique -->
+                <div x-show="souscriptionData.identification?.typePersonne === 'physique'" class="space-y-2">
+                    <p class="text-gray-600">Type: Personne Physique</p>
+                    <p class="text-gray-600">Nom complet: <span x-text="souscriptionData.identification?.nom_complet"></span></p>
+                    <p class="text-gray-600">Type de document: <span x-text="souscriptionData.identification?.document"></span></p>
+                    <p class="text-gray-600">Numéro de pièce: <span x-text="souscriptionData.identification?.numero_piece"></span></p>
+                    <p class="text-gray-600">Date d'expiration: <span x-text="souscriptionData.identification?.date_expiration"></span></p>
+                    <p class="text-gray-600">Date d'établissement: <span x-text="souscriptionData.identification?.date_etablissement"></span></p>
+                    <p class="text-gray-600">Pays: <span x-text="souscriptionData.identification?.pays"></span></p>
+                    <p class="text-gray-600">Téléphone: <span x-text="souscriptionData.identification?.telephone"></span></p>
+                    <p class="text-gray-600">Email: <span x-text="souscriptionData.identification?.email"></span></p>
+                </div>
+
+                <!-- Pour personne morale -->
+                <div x-show="souscriptionData.identification?.typePersonne === 'morale'" class="space-y-2">
+                    <p class="text-gray-600">Type: Personne Morale</p>
+                    <p class="text-gray-600">Raison sociale: <span x-text="souscriptionData.identification?.raison_sociale"></span></p>
+                    <p class="text-gray-600">Forme juridique: <span x-text="souscriptionData.identification?.forme_juridique"></span></p>
+                    <p class="text-gray-600">RCCM: <span x-text="souscriptionData.identification?.rccm"></span></p>
+                    <p class="text-gray-600">IFU: <span x-text="souscriptionData.identification?.ifu"></span></p>
+                    <p class="text-gray-600">Siège social: <span x-text="souscriptionData.identification?.siege_social"></span></p>
+                    <p class="text-gray-600">Nom du représentant: <span x-text="souscriptionData.identification?.nom_representant + ' ' + souscriptionData.identification?.prenom_representant"></span></p>
+                    <p class="text-gray-600">Fonction: <span x-text="souscriptionData.identification?.fonction_representant"></span></p>
+                    <p class="text-gray-600">Pays: <span x-text="souscriptionData.identification?.pays"></span></p>
+                    <p class="text-gray-600">Téléphone: <span x-text="souscriptionData.identification?.telephone"></span></p>
+                    <p class="text-gray-600">Email: <span x-text="souscriptionData.identification?.email"></span></p>
+                </div>
+            </div>
+
+
+            <!-- Parcelle sélectionnée -->
+            <div class="border-b pb-4">
+                <h4 class="font-semibold text-lg mb-2">Parcelle sélectionnée</h4>
+                <p class="text-gray-600">Type: <span x-text="souscriptionData.typeParcelle?.nom"></span></p>
+                <p class="text-gray-600">Position: <span x-text="souscriptionData.parcelle?.position"></span></p>
+                <p class="text-gray-600">Section: <span x-text="souscriptionData.parcelle?.section"></span></p>
+                <p class="text-gray-600">Lot: <span x-text="souscriptionData.parcelle?.lot"></span></p>
+                <p class="text-gray-600">Surface: <span x-text="parseInt(souscriptionData.parcelle?.surface).toLocaleString('fr-FR') + ' m²'"></span></p>
+                <p class="text-gray-600">Coût/m²: <span x-text="parseInt(souscriptionData.parcelle?.coutUnitaire).toLocaleString('fr-FR') + ' FCFA'"></span></p>
+                <p class="text-green-600 font-bold">Prix total: <span x-text="parseInt(souscriptionData.parcelle?.prix).toLocaleString('fr-FR') + ' FCFA'"></span></p>
+                <p class="text-blue-600">Acompte: <span x-text="parseInt(souscriptionData.parcelle?.acompte).toLocaleString('fr-FR') + ' FCFA'"></span></p>
+                <template x-if="souscriptionData.parcelle?.resteAPayer">
+                    <p class="text-orange-600">Reste à payer: <span x-text="parseInt(souscriptionData.parcelle?.resteAPayer).toLocaleString('fr-FR') + ' FCFA'"></span></p>
+                </template>
+            </div>
+
+            <!-- Frais de souscription -->
+            <div class="border-b pb-4">
+                <h4 class="font-semibold text-lg mb-2">Frais de souscription</h4>
+                <p class="text-green-600 font-bold text-lg">
+                    Montant: <span x-text="parseInt(souscriptionData.operation?.montant_souscription || 0).toLocaleString('fr-FR') + ' FCFA'"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Section paiement -->
+        <div class="mt-6 space-y-4">
+            <h3 class="font-bold text-lg">Méthode de paiement</h3>
+            <div class="grid grid-cols-2 gap-4" x-data="{ selectedMethod: null }">
+                <!-- Option Mobile Money -->
+                <div>
+                    <h4 class="font-medium mb-3">Mobile Money</h4>
+                    <button 
+                        @click="selectedMethod = 'Mobile Money'"
+                        :class="{'border-green-500 bg-green-50': selectedMethod === 'Mobile Money'}"
+                        class="border rounded-lg p-4 hover:border-green-500 focus:border-green-500 flex flex-col items-center w-full transition-all duration-200">
+                        <i class="fas fa-mobile-alt text-3xl mb-2" 
+                           :class="{'text-green-600': selectedMethod === 'Mobile Money'}"></i>
+                        <span>Mobile Money</span>
+                    </button>
+                </div>
+
+                <!-- Option Carte bancaire -->
+                <div>
+                    <h4 class="font-medium mb-3">Carte bancaire</h4>
+                    <button 
+                        @click="selectedMethod = 'Carte bancaire'"
+                        :class="{'border-green-500 bg-green-50': selectedMethod === 'Carte bancaire'}"
+                        class="border rounded-lg p-4 hover:border-green-500 focus:border-green-500 flex flex-col items-center w-full transition-all duration-200">
+                        <i class="fas fa-credit-card text-3xl mb-2"
+                           :class="{'text-green-600': selectedMethod === 'Carte bancaire'}"></i>
+                        <span>Carte bancaire</span>
+                    </button>
+                </div>
+
+                <!-- Bouton de paiement -->
+                <div class="col-span-2">
+                    <button 
+                        @click="
+                            if (!selectedMethod) {
+                                alert('Veuillez sélectionner une méthode de paiement');
+                                return;
+                            }
+
+                            // Générer et stocker le numéro de transaction
+                            const paiementInfo = {
+                                methode: selectedMethod,
+                                numeroTransaction: 'TX-' + Date.now(),
+                                date: new Date().toISOString()
+                            };
+                            localStorage.setItem('paiementInfo', JSON.stringify(paiementInfo));
+
+                            // Préparer les données pour l'API
+                            const paymentData = {
+                                identification: JSON.parse(localStorage.getItem('identification')),
+                                parcelle: JSON.parse(localStorage.getItem('parcelleChoisie')),
+                                typeParcelle: JSON.parse(localStorage.getItem('typeParcelle')),
+                                operation: JSON.parse(localStorage.getItem('operation')),
+                                paiement: paiementInfo
+                            };
+ 
+                            // Appel à l'API de paiement LigdiCash
+                            fetch('/api/paiement/initier/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': '{{ csrf_token }}',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(paymentData)
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    // Stocker le token de paiement
+                                    localStorage.setItem('paymentToken', data.token);
+                                    
+                                    // Rediriger vers la page de paiement LigdiCash
+                                    window.location.href = data.payment_url;
+                                } else {
+                                    alert('Erreur lors de l\'initialisation du paiement: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erreur:', error);
+                                alert('Erreur lors de l\'initialisation du paiement');
+                            });"
+                        :disabled="!selectedMethod"
+                        :class="{
+                            'opacity-50 cursor-not-allowed': !selectedMethod,
+                            'sonatur-green sonatur-green-hover': selectedMethod
+                        }"
+                        class="w-full text-white py-3 px-4 rounded-lg mt-6">
+                        <span x-text="selectedMethod ? 'Procéder au paiement par ' + selectedMethod : 'Sélectionnez une méthode de paiement'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <button 
+            @click="
+                const parcelleData = JSON.parse(localStorage.getItem('parcelleChoisie'));
+                if (parcelleData && parcelleData.id) {
+                    fetch(`/debloquer_parcelle/${parcelleData.id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('Parcelle débloquée avec succès');
+                            // Effacer le localStorage
+                            localStorage.clear();
+                            // Rediriger vers la page de souscription
+                            window.location.href = '/souscrire';
+                        } else {
+                            console.error('Erreur lors du déblocage de la parcelle');
+                            // En cas d'erreur, on efface quand même le localStorage et on redirige
+                            localStorage.clear();
+                            window.location.href = '/souscrire';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        // En cas d'erreur, on efface quand même le localStorage et on redirige
+                        localStorage.clear();
+                        window.location.href = '/souscrire';
+                    });
+                } else {
+                    // Si pas de parcelle, simplement effacer le localStorage et rediriger
+                    localStorage.clear();
+                    window.location.href = '/souscrire';
+                }
+            "
+            class="text-red-600 hover:text-red-800 font-medium py-2 px-4 rounded-lg border border-red-600 hover:border-red-800 transition-all duration-200"
+        >
+            <i class="fas fa-times-circle mr-2"></i>
+            Annuler la souscription et le paiement
+        </button>
+    </div>
+</div>

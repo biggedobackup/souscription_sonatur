@@ -1,0 +1,592 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Utilisateurs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    {% include 'tableau_administration/header.html' %}
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
+            <button onclick="openAddModal()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                Ajouter un utilisateur
+            </button>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="mb-6 max-w-md">
+            <form method="GET" class="flex gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               placeholder="Rechercher un utilisateur..." 
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 pl-7 text-sm">
+                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" 
+                        class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-search"></i>
+                    Rechercher
+                </button>
+                {% if search_query %}
+                <a href="{% url 'tableau_administration:liste_utilisateurs' %}" 
+                   class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-times"></i>
+                    Réinitialiser
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if messages %}
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4">
+            {% for message in messages %}
+            <div class="toast-message transform transition-all duration-300 ease-out translate-x-0 opacity-100 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 
+                    {% if message.tags == 'success' %}text-green-500 bg-green-100
+                    {% elif message.tags == 'error' %}text-red-500 bg-red-100
+                    {% else %}text-blue-500 bg-blue-100{% endif %}
+                    rounded-lg">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation"></i>
+                    {% else %}
+                        <i class="fas fa-info"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tableau des utilisateurs -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                           
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nom Complet
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Rôle
+                            </th>
+                          
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Statut
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for utilisateur in utilisateurs %}
+                        <tr>
+                          
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {{ utilisateur.nom_complet }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {{ utilisateur.email }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                           {% if utilisateur.role.nom == 'ADMIN' %}bg-purple-100 text-purple-800
+                                           {% elif utilisateur.role.nom == 'MODERATEUR' %}bg-blue-100 text-blue-800
+                                           {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ utilisateur.role.nom }}
+                                </span>
+                            </td>
+                         
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                           {% if utilisateur.actif %}bg-green-100 text-green-800
+                                           {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ utilisateur.actif|yesno:"Actif,Inactif" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button data-action="edit"
+                                            data-user="{{ utilisateur.id }}"
+                                            data-nom-complet="{{ utilisateur.nom_complet }}"
+                                            data-email="{{ utilisateur.email }}"
+                                            data-role="{{ utilisateur.role.id }}"
+                                            data-actif="{{ utilisateur.actif|yesno:'true,false' }}"
+                                            class="flex items-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-sm hover:bg-indigo-200 transition duration-200">
+                                        <i class="fas fa-edit text-base mr-1"></i>
+                                        <span class="text-xs">Éditer</span>
+                                    </button>
+                                    
+                                    <button data-action="view"
+                                            data-user="{{ utilisateur.id }}"
+                                            data-nom-complet="{{ utilisateur.nom_complet }}"
+                                            data-email="{{ utilisateur.email }}"
+                                            data-role="{{ utilisateur.role.nom }}"
+                                            data-date-creation="{{ utilisateur.date_creation|date:'d/m/Y H:i' }}"
+                                            data-derniere-connexion="{{ utilisateur.date_derniere_connexion|date:'d/m/Y H:i'|default:'Jamais' }}"
+                                            data-status="{{ utilisateur.actif|yesno:'Actif,Inactif' }}"
+                                            class="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-sm hover:bg-blue-200 transition duration-200">
+                                        <i class="fas fa-eye text-base mr-1"></i>
+                                        <span class="text-xs">Voir</span>
+                                    </button>
+                                    
+                                    <button data-action="delete"
+                                            data-user="{{ utilisateur.id }}"
+                                            data-nom-complet="{{ utilisateur.nom_complet }}"
+                                            class="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-sm hover:bg-red-200 transition duration-200">
+                                        <i class="fas fa-trash text-base mr-1"></i>
+                                        <span class="text-xs">Supprimer</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Affichage de {{ utilisateurs.start_index }} à {{ utilisateurs.end_index }} sur {{ utilisateurs.paginator.count }} utilisateurs
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if utilisateurs.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ utilisateurs.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700">
+                    Page {{ utilisateurs.number }} sur {{ utilisateurs.paginator.num_pages }}
+                </span>
+
+                {% if utilisateurs.has_next %}
+                    <a href="?page={{ utilisateurs.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ utilisateurs.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Ajout Utilisateur -->
+    <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Ajouter un utilisateur</h3>
+                <form id="addUserForm" method="POST" action="{% url 'tableau_administration:ajouter_utilisateur' %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="nom_complet">
+                            Nom complet
+                        </label>
+                        <input type="text" name="nom_complet" id="nom_complet" required
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                            Email
+                        </label>
+                        <input type="email" name="email" id="email" required
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                            Mot de passe
+                        </label>
+                        <input type="password" name="password" id="password" required
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="role">
+                            Rôle *
+                        </label>
+                        <select name="role" id="role" required
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Sélectionnez un rôle</option>
+                            {% for role in roles %}
+                                <option value="{{ role.id }}">{{ role.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-4">
+                        <button type="button" onclick="closeAddModal()"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Annuler
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            Ajouter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-4 mx-auto p-4 w-full max-w-[500px] sm:top-20 sm:p-5">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg sm:text-xl font-medium text-gray-900">Modifier un utilisateur</h3>
+                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <form id="editUserForm" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_nom_complet">
+                                Nom complet
+                            </label>
+                            <input type="text" name="nom_complet" id="edit_nom_complet" required
+                                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_email">
+                                Email
+                            </label>
+                            <input type="email" name="email" id="edit_email" required
+                                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_password">
+                                Nouveau mot de passe
+                            </label>
+                            <input type="password" name="password" id="edit_password"
+                                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   placeholder="Laisser vide pour ne pas modifier">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="edit_role">
+                                Rôle
+                            </label>
+                            <select name="role" id="edit_role" required
+                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                {% for role in roles %}
+                                    <option value="{{ role.id }}">{{ role.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="is_active" id="edit_is_active" class="form-checkbox h-5 w-5 text-green-600">
+                                <span class="ml-2 text-gray-700">Utilisateur actif</span>
+                            </label>
+                        </div>
+                        <div class="flex justify-end gap-4">
+                            <button type="button" onclick="closeEditModal()"
+                                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center">
+                                <i class="fas fa-times mr-2"></i>
+                                Annuler
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center">
+                                <i class="fas fa-save mr-2"></i>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-4 mx-auto p-4 w-full max-w-[400px] sm:top-20 sm:p-5">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg sm:text-xl font-medium text-gray-900">Supprimer un utilisateur</h3>
+                    <button onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <p class="text-gray-600">Êtes-vous sûr de vouloir supprimer l'utilisateur <span id="delete_username" class="font-semibold"></span> ?</p>
+                    <p class="text-red-600 text-sm mt-2">Cette action est irréversible.</p>
+                </div>
+                <div class="flex justify-end gap-4 p-4 border-t bg-gray-50">
+                    <button type="button" onclick="closeDeleteModal()"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Annuler
+                    </button>
+                    <button onclick="confirmDelete()"
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 flex items-center">
+                        <i class="fas fa-trash mr-2"></i>
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+        <div class="relative top-4 mx-auto p-4 w-full max-w-[500px] sm:top-20 sm:p-5">
+            <div class="bg-white rounded-lg shadow-xl">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg sm:text-xl font-medium text-gray-900">Détails de l'utilisateur</h3>
+                    <button onclick="closeViewModal()" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <div class="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-400 text-3xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-medium text-gray-900" id="view_nom_complet_header"></h4>
+                            <p class="text-gray-500" id="view_email_header"></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">Nom complet</p>
+                            <p class="font-medium text-gray-900" id="view_nom_complet"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">Email</p>
+                            <p class="font-medium text-gray-900" id="view_email"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">Rôle</p>
+                            <p class="font-medium text-gray-900" id="view_role"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">Date de création</p>
+                            <p class="font-medium text-gray-900" id="view_date_creation"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">Dernière connexion</p>
+                            <p class="font-medium text-gray-900" id="view_derniere_connexion"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-500">Statut</p>
+                            <p class="font-medium text-gray-900" id="view_status"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end p-4 border-t bg-gray-50">
+                    <button type="button" onclick="closeViewModal()"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center">
+                        <i class="fas fa-times mr-2"></i>
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'tableau_administration/footer.html' %}
+
+    <script>
+        let currentUserId = null;
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        function openEditModal(data) {
+            currentUserId = data.user;
+            const form = document.getElementById('editUserForm');
+            form.action = `{% url 'tableau_administration:modifier_utilisateur' 0 %}`.replace('0', data.user);
+            
+            document.getElementById('edit_nom_complet').value = data.nomComplet;
+            document.getElementById('edit_email').value = data.email;
+            document.getElementById('edit_password').value = '';
+            document.getElementById('edit_role').value = data.role;
+            document.getElementById('edit_is_active').checked = data.actif === 'true';
+            
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            currentUserId = null;
+        }
+
+        function openViewModal(data) {
+            document.getElementById('view_nom_complet_header').textContent = data.nomComplet;
+            document.getElementById('view_email_header').textContent = data.email;
+            document.getElementById('view_nom_complet').textContent = data.nomComplet;
+            document.getElementById('view_email').textContent = data.email;
+            document.getElementById('view_role').textContent = data.role;
+            document.getElementById('view_date_creation').textContent = data.dateCreation;
+            document.getElementById('view_derniere_connexion').textContent = data.derniereConnexion;
+            document.getElementById('view_status').textContent = data.status;
+            
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function openDeleteModal(data) {
+            currentUserId = data.user;
+            document.getElementById('delete_username').textContent = data.username;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            currentUserId = null;
+        }
+
+        function confirmDelete() {
+            if (currentUserId) {
+                window.location.href = `{% url 'tableau_administration:supprimer_utilisateur' 0 %}`.replace('0', currentUserId);
+            }
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        // Fermer les modaux en cliquant en dehors
+        window.onclick = function(event) {
+            const modals = [
+                document.getElementById('editModal'),
+                document.getElementById('deleteModal'),
+                document.getElementById('viewModal'),
+                document.getElementById('addModal')
+            ];
+            
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+
+        // Gestion des messages toast
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast-message');
+            
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gestion des clics sur les boutons d'action
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                const userData = button.dataset;
+
+                switch(action) {
+                    case 'edit':
+                        openEditModal(userData);
+                        break;
+                    case 'view':
+                        openViewModal(userData);
+                        break;
+                    case 'delete':
+                        openDeleteModal(userData);
+                        break;
+                }
+            });
+        });
+
+        // Gestion des formulaires
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const email = document.getElementById('email').value;
+            const nom_complet = document.getElementById('nom_complet').value;
+            
+            if (!role) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un rôle.');
+                return;
+            }
+            
+            if (!email || !nom_complet) {
+                e.preventDefault();
+                alert('Tous les champs obligatoires doivent être remplis.');
+                return;
+            }
+            
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Le mot de passe doit contenir au moins 8 caractères.');
+                return;
+            }
+        });
+
+        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('edit_email').value;
+            const password = document.getElementById('edit_password').value;
+            
+            if (!email) {
+                e.preventDefault();
+                alert('Tous les champs obligatoires doivent être remplis.');
+            }
+            if (password && password.length < 8) {
+                e.preventDefault();
+                alert('Le mot de passe doit contenir au moins 8 caractères.');
+            }
+        });
+
+        // Fonction pour mettre à jour le compteur d'utilisateurs
+        function updateUserCount() {
+            const count = document.querySelectorAll('tbody tr').length;
+            document.getElementById('user-count').textContent = count;
+        }
+
+        // Appeler après chaque action
+        document.addEventListener('DOMContentLoaded', updateUserCount);
+    </script>
+</body>
+
+</html> 

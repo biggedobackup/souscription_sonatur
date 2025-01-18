@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur 500 - Erreur Interne du Serveur{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1>500</h1>
+        <h2>Erreur Interne du Serveur</h2>
+        <p>Un problème inattendu est survenu. Nos équipes techniques ont été informées.</p>
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Revenir en arrière</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

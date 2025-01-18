@@ -1,0 +1,140 @@
+<!-- Timer Component -->
+<div x-data="timer"
+     x-cloak
+     x-show="shouldShowTimer"
+     @start-timer.window="start($event.detail.duree)"
+     @stop-timer.window="stop()"
+     x-init="initTimer()"
+     class="fixed top-20 right-6 bg-white rounded-lg shadow-lg p-4 border border-gray-200 z-50">
+    <div class="flex items-center gap-2 mb-2">
+        <i class="fas fa-clock" :class="timeLeft <= 60 ? 'text-red-500 animate-pulse' : 'text-gray-500'"></i>
+        <span class="font-medium text-gray-700">Temps restant</span>
+    </div>
+    <div class="text-2xl font-bold" :class="timeLeft <= 60 ? 'text-red-600' : 'text-gray-900'" x-text="displayTime"></div>
+    <div class="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div class="h-full transition-all duration-1000 ease-linear bg-green-500"
+             :class="{'bg-red-500': timeLeft <= 60}"
+             :style="`width: ${percentage}%`"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('timer', () => ({
+        timeLeft: 0,
+        totalTime: 0,
+        endTime: null,
+        isRunning: false,
+        timerId: null,
+
+        get shouldShowTimer() {
+            return this.isRunning && this.timeLeft > 0;
+        },
+
+        initTimer() {
+            // Vérifier si on est sur la page de paiement (étape 6)
+            const currentPath = window.location.pathname;
+            const isEtape6 = document.querySelector('[x-show="etape === 6"]');
+            
+            const endTime = localStorage.getItem('endTime');
+            const totalTime = localStorage.getItem('totalTime');
+            const currentStep = localStorage.getItem('currentStep');
+
+            if (endTime && totalTime && (isEtape6 || currentStep === '6')) {
+                const now = new Date().getTime();
+                const end = new Date(endTime).getTime();
+                
+                if (now < end) {
+                    this.endTime = new Date(endTime);
+                    this.timeLeft = Math.floor((end - now) / 1000);
+                    this.totalTime = parseInt(totalTime);
+                    this.isRunning = true;
+                    this.resumeTimer();
+                } else {
+                    // Si l'heure de fin est dépassée
+                    this.debloquerParcelle();
+                }
+            }
+        },
+
+        start(duree) {
+            if (this.isRunning) return;
+            
+            const now = new Date();
+            this.endTime = new Date(now.getTime() + (duree * 60 * 1000));
+            this.totalTime = duree * 60;
+            this.timeLeft = this.totalTime;
+            
+            // Sauvegarder l'état du timer
+            localStorage.setItem('endTime', this.endTime.toISOString());
+            localStorage.setItem('totalTime', this.totalTime.toString());
+            localStorage.setItem('currentStep', '6'); // Sauvegarder l'étape actuelle
+            
+            this.isRunning = true;
+            this.resumeTimer();
+        },
+
+        resumeTimer() {
+            if (this.timerId) return;
+            
+            this.timerId = setInterval(() => {
+                const now = new Date().getTime();
+                const end = this.endTime.getTime();
+                
+                if (now >= end) {
+                    this.stop();
+                    this.debloquerParcelle();
+                    return;
+                }
+                
+                this.timeLeft = Math.floor((end - now) / 1000);
+                
+                // Mettre à jour le localStorage à chaque tick
+                localStorage.setItem('timeLeft', this.timeLeft.toString());
+            }, 1000);
+        },
+
+        debloquerParcelle() {
+            const parcelleData = JSON.parse(localStorage.getItem('parcelleChoisie'));
+            if (parcelleData && parcelleData.id) {
+                fetch(`/debloquer_parcelle/${parcelleData.id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        this.stop();
+                        this.$dispatch('show-timeout-modal');
+                    }
+                }).catch(error => {
+                    console.error('Erreur lors du déblocage:', error);
+                });
+            }
+        },
+
+        stop() {
+            if (this.timerId) {
+                clearInterval(this.timerId);
+                this.timerId = null;
+            }
+            this.isRunning = false;
+            // Nettoyer le localStorage du timer
+            localStorage.removeItem('endTime');
+            localStorage.removeItem('totalTime');
+            localStorage.removeItem('timeLeft');
+            localStorage.removeItem('currentStep');
+        },
+
+        get displayTime() {
+            const minutes = Math.floor(this.timeLeft / 60);
+            const seconds = this.timeLeft % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        },
+
+        get percentage() {
+            return (this.timeLeft / this.totalTime) * 100;
+        }
+    }));
+});
+</script>

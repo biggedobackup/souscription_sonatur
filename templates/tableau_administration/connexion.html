@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .input-focus:focus {
+            outline: none;
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-green-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-3xl shadow-2xl w-96 max-w-full mx-4 border border-green-200">
+        <div class="text-center mb-8">
+            <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-shield-alt text-5xl text-green-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800">Connexion Administrateur</h1>
+            <p class="text-gray-500 mt-2">Veuillez vous connecter pour continuer</p>
+        </div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} 
+                            px-4 py-3 rounded-lg mb-4 flex items-center border">
+                    <i class="{% if message.tags == 'error' %}fas fa-exclamation-triangle{% else %}fas fa-check-circle{% endif %} mr-2"></i>
+                    <p class="flex-1 text-sm">{{ message }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block text-gray-700 font-medium mb-2 flex items-center" for="username">
+                    <i class="fas fa-envelope text-green-600 mr-2"></i>Email
+                </label>
+                <div class="relative">
+                    <input type="email" name="username" id="username" required 
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg input-focus transition duration-200"
+                           placeholder="exemple@email.com">
+                    <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            <div>
+                <label class="block text-gray-700 font-medium mb-2 flex items-center" for="password">
+                    <i class="fas fa-lock text-green-600 mr-2"></i>Mot de passe
+                </label>
+                <div class="relative">
+                    <input type="password" name="password" id="password" required
+                           class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg input-focus transition duration-200"
+                           placeholder="••••••••">
+                    <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <button type="button" onclick="togglePassword()" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" 
+                    class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition duration-200 flex items-center justify-center space-x-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Se connecter</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = event.currentTarget.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

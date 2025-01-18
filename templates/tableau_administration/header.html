@@ -1,0 +1,292 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-green-800">
+        <div class="text-center">
+            <h1 class="text-white text-3xl font-bold mb-6">SOUSCRIPTION SONATUR</h1>
+            <div class="w-16 h-16 border-4 border-white border-t-green-400 rounded-full animate-spin mx-auto"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header x-data="{ mobileMenuOpen: false }"
+        class="bg-gradient-to-r from-green-800 to-green-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo et titre -->
+                <a href="{% url 'tableau_administration:tableau' %}">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-white p-2 rounded-lg">
+                            <i class="fas fa-shield-alt text-2xl text-green-600"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-1xl tracking-tight">SOUSCRIPTION SONATUR</span>
+                            <span class="text-xs text-green-200">Administration</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Navigation principale -->
+                <nav class="hidden md:flex space-x-1">
+                    <a href="{% url 'tableau_administration:tableau' %}"
+                        class="px-4 py-2 rounded-lg hover:bg-green-700/50 transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-home text-green-200"></i>
+                        <span>Accueil</span>
+                    </a>
+                    <a href="{% url 'tableau_administration:liste_utilisateurs' %}"
+                        class="px-4 py-2 rounded-lg hover:bg-green-700/50 transition-colors duration-200 flex items-center space-x-2">
+                        <i class="fas fa-users text-green-200"></i>
+                        <span>Utilisateurs</span>
+                    </a>
+                    <div class="relative group" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open"
+                            class="px-4 py-2 rounded-lg hover:bg-green-700/50 transition-colors duration-200 flex items-center space-x-2">
+                            <i class="fas fa-tasks text-green-200"></i>
+                            <span>Opérations</span>
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                        <div x-show="open"
+                            class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 text-gray-700">
+                            <a href="{% url 'tableau_administration:liste_parcelles' %}" class="block px-4 py-2 hover:bg-gray-100">Listes des Parcelles</a>
+                            <a href="{% url 'tableau_administration:liste_localites' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Localités</a>
+                            <a href="{% url 'tableau_administration:liste_processus_attribution' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Processus d'attribution</a>
+                            <a href="{% url 'tableau_administration:liste_positions_parcelles' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Positions de parcelles</a>
+                            <a href="{% url 'tableau_administration:liste_projets' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Projets</a>
+                            <a href="{% url 'tableau_administration:liste_types_parcelles' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Types de parcelles</a>
+                            <a href="{% url 'tableau_administration:liste_conditions' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Conditions de souscription</a>
+                                <a href="{% url 'tableau_administration:liste_operations' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Liste des opérations</a>
+                        </div>
+                    </div>
+
+                    <div class="relative group" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open"
+                            class="px-4 py-2 rounded-lg hover:bg-green-700/50 transition-colors duration-200 flex items-center space-x-2">
+                            <i class="fas fa-money-bill-wave text-green-200"></i>
+                            <span>Paiements</span>
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                        <div x-show="open"
+                            class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 text-gray-700">
+                            <a href="{% url 'tableau_administration:liste_comptes_bancaires' %} "
+                                class="block px-4 py-2 hover:bg-gray-100">Comptes Bancaires</a>
+                            <a href="{% url 'tableau_administration:liste_modes_paiement' %}"
+                             class="block px-4 py-2 hover:bg-gray-100">Modes de Paiement</a>
+                            <a href="{% url 'tableau_administration:liste_paiements' %}" class="block px-4 py-2 hover:bg-gray-100">Listes des Paiements</a>
+                        </div>
+                    </div>
+
+                    <div class="relative group" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open"
+                            class="px-4 py-2 rounded-lg hover:bg-green-700/50 transition-colors duration-200 flex items-center space-x-2">
+                            <i class="fas fa-users text-green-200"></i>
+                            <span>Souscriptions</span>
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                        <div x-show="open"
+                            class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 text-gray-700">
+                            <a href="{% url 'tableau_administration:liste_souscripteurs_moraux' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Souscripteurs Moraux</a>
+                            <a href="{% url 'tableau_administration:liste_souscripteurs_physiques' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Souscripteurs Physiques</a>
+                            <a href="{% url 'tableau_administration:liste_types_souscripteurs' %}"
+                                class="block px-4 py-2 hover:bg-gray-100">Types de Souscripteurs</a>
+                            <a href="{% url 'tableau_administration:liste_souscriptions' %}" class="block px-4 py-2 hover:bg-gray-100">Listes des Souscriptions</a>
+                        </div>
+                    </div>
+
+                </nav>
+
+                <!-- Actions rapides et profil -->
+                <div class="flex items-center space-x-6">
+                    <!-- Profil -->
+                    <div class="relative">
+                        <button onclick="toggleUserMenu()"
+                            class="flex items-center space-x-3 hover:bg-green-700/50 rounded-lg p-2">
+                            <i
+                                class="fas fa-user-circle text-3xl text-gray-400 border-2 border-green-400 rounded-full p-1"></i>
+                            <div class="hidden md:block text-left">
+                                <div class="font-semibold">{{ user.nom_complet }}</div>
+                                <div class="text-xs text-green-200">{{ user.role.nom|default:"Utilisateur" }}</div>
+                            </div>
+                            <i class="fas fa-chevron-down text-green-300"></i>
+                        </button>
+
+                        <!-- Menu déroulant profil -->
+                        <div id="userMenu"
+                            class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 text-gray-700">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <div class="font-semibold">{{ user.nom_complet }}</div>
+                                <div class="text-sm text-gray-500">{{ user.email }}</div>
+                                <div class="text-xs text-gray-400">{{ user.role.nom|default:"Utilisateur" }}</div>
+                            </div>
+                            <a href="{% url 'tableau_administration:profil' %}"
+                                class="flex items-center px-4 py-2 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-user-circle w-5 text-gray-400"></i>
+                                <span>Mon profil</span>
+                            </a>
+
+                            <a href="https://www.google.com" target="_blank"
+                                class="flex items-center px-4 py-2 hover:bg-gray-50 transition-colors duration-200">
+                                <i class="fas fa-question-circle w-5 text-gray-400"></i>
+                                <span>Aide</span>
+                            </a>
+                            <hr class="my-2">
+                            <a href="{% url 'tableau_administration:deconnexion' %}"
+                                class="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200">
+                                <i class="fas fa-sign-out-alt w-5"></i>
+                                <span>Déconnexion</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Bouton menu mobile -->
+                    <button class="md:hidden p-2 hover:bg-green-700/50 rounded-lg"
+                        @click="mobileMenuOpen = !mobileMenuOpen">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu mobile -->
+        <div class="md:hidden border-t border-green-700">
+            <div x-data="{ operationsOpen: false, paymentsOpen: false, subscriptionsOpen: false }"
+                x-show="mobileMenuOpen" class="px-4 py-2 space-y-1" @click.outside="mobileMenuOpen = false">
+                <a href="#" class="block px-4 py-2 hover:bg-green-700/50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-home w-6"></i> Accueil
+                </a>
+
+                <div class="border-t border-green-700/30 pt-2">
+                    <button @click="operationsOpen = !operationsOpen"
+                        class="w-full px-4 py-2 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <i class="fas fa-tasks w-6 text-green-200"></i>
+                            <span class="text-sm text-green-200">Opérations</span>
+                        </span>
+                        <i class="fas fa-chevron-down" :class="{ 'transform rotate-180': operationsOpen }"></i>
+                    </button>
+                    <div x-show="operationsOpen" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform -translate-y-2"
+                        x-transition:enter-end="opacity-100 transform translate-y-0" class="pl-6">
+                        <a href="#" class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Listes des Parcelles</a>
+                        <a href="{% url 'tableau_administration:liste_localites' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Localités</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Opérations</a>
+                        <a href="{% url 'tableau_administration:liste_positions_parcelles' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Positions de parcelles</a>
+                        <a href="{% url 'tableau_administration:liste_processus_attribution' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Processus d'attribution</a>
+                        <a href="{% url 'tableau_administration:liste_projets' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Projets</a>
+                        <a href="{% url 'tableau_administration:liste_types_parcelles' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Types de parcelles</a>
+                    </div>
+                </div>
+
+                <div class="border-t border-green-700/30 pt-2">
+                    <button @click="paymentsOpen = !paymentsOpen"
+                        class="w-full px-4 py-2 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <i class="fas fa-money-bill-wave w-6 text-green-200"></i>
+                            <span class="text-sm text-green-200">Paiements</span>
+                        </span>
+                        <i class="fas fa-chevron-down" :class="{ 'transform rotate-180': paymentsOpen }"></i>
+                    </button>
+                    <div x-show="paymentsOpen" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform -translate-y-2"
+                        x-transition:enter-end="opacity-100 transform translate-y-0" class="pl-6">
+                        <a href="{% url 'tableau_administration:liste_comptes_bancaires' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Comptes Bancaires</a>
+                        <a href="{% url 'tableau_administration:liste_modes_paiement' %}" class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Modes de Paiement</a>
+                        <a href="{% url 'tableau_administration:liste_paiements' %}" class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Listes des paiements</a>
+                 
+                    </div>
+                </div>
+
+                <div class="border-t border-green-700/30 pt-2">
+                    <button @click="subscriptionsOpen = !subscriptionsOpen"
+                        class="w-full px-4 py-2 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <i class="fas fa-users w-6 text-green-200"></i>
+                            <span class="text-sm text-green-200">Souscriptions</span>
+                        </span>
+                        <i class="fas fa-chevron-down" :class="{ 'transform rotate-180': subscriptionsOpen }"></i>
+                    </button>
+                    <div x-show="subscriptionsOpen" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform -translate-y-2"
+                        x-transition:enter-end="opacity-100 transform translate-y-0" class="pl-6">
+                        <a href="{% url 'tableau_administration:liste_souscripteurs_moraux' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Souscripteurs Moraux</a>
+                        <a href="{% url 'tableau_administration:liste_souscripteurs_physiques' %}"
+                            class="block px-4 py-2 hover:bg-green-700/50 rounded-lg">Souscripteurs Physiques</a>
+                        <a href="{% url 'tableau_administration:liste_types_souscripteurs' %}"
+                            class="block px-4 py-2 hover:bg-gray-100">Types de Souscripteurs</a>
+                            <a href="{% url 'tableau_administration:liste_souscriptions' %}"
+                            class="block px-4 py-2 hover:bg-gray-100">listes des  Souscriptions</a>  
+                    </div>
+                </div>
+
+                <a href="#" class="block px-4 py-2 hover:bg-green-700/50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-users w-6"></i> Utilisateurs
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <script>
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Fermer le menu utilisateur lors d'un clic à l'extérieur
+        document.addEventListener('click', function (event) {
+            const userMenu = document.getElementById('userMenu');
+            if (!event.target.closest('button')) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Ajout du code pour le splash screen
+        document.addEventListener('DOMContentLoaded', function () {
+            const splashScreen = document.getElementById('splash-screen');
+
+            // Masquer le défilement pendant le chargement
+            document.body.style.overflow = 'hidden';
+
+            // Cacher le splash screen après 1 seconde au lieu de 2
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                splashScreen.style.transition = 'opacity 0.5s ease-out';
+                document.body.style.overflow = 'auto';
+
+                // Supprimer complètement le splash screen après la transition
+                setTimeout(() => {
+                    splashScreen.remove();
+                }, 100);
+            }, 300);
+        });
+    </script>
+
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+
+</html>

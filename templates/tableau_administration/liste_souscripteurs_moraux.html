@@ -1,0 +1,713 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Souscripteurs Moraux</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    {% include 'tableau_administration/header.html' %}
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des Souscripteurs Moraux</h1>
+            <button onclick="openAddModal()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                Ajouter un souscripteur moral
+            </button>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="mb-6 max-w-md">
+            <form method="GET" class="flex gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               placeholder="Rechercher un souscripteur..." 
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 pl-7 text-sm">
+                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" 
+                        class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-search"></i>
+                    Rechercher
+                </button>
+                {% if search_query %}
+                <a href="{% url 'tableau_administration:liste_souscripteurs_moraux' %}" 
+                   class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-times"></i>
+                    Réinitialiser
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if messages %}
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4">
+            {% for message in messages %}
+            <div class="toast-message transform transition-all duration-300 ease-out translate-x-0 opacity-100 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 
+                    {% if message.tags == 'success' %}text-green-500 bg-green-100
+                    {% elif message.tags == 'error' %}text-red-500 bg-red-100
+                    {% else %}text-blue-500 bg-blue-100{% endif %}
+                    rounded-lg">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation"></i>
+                    {% else %}
+                        <i class="fas fa-info"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tableau des souscripteurs moraux -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Raison Sociale</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Forme Juridique</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RCCM</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IFU</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Représentant</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fonction</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localisation</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for souscripteur in souscripteurs %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscripteur.raison_sociale }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscripteur.get_forme_juridique_display }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscripteur.rccm|default:"-" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscripteur.ifu|default:"-" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm">
+                                    <div>{{ souscripteur.nom_representant }} {{ souscripteur.prenom_representant }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm">{{ souscripteur.fonction_representant }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm">
+                                    <div>{{ souscripteur.telephone }}</div>
+                                    <div class="text-gray-500">{{ souscripteur.email }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm">
+                                    <div>{{ souscripteur.ville }}, {{ souscripteur.region }}</div>
+                                    <div class="text-gray-500">{{ souscripteur.pays }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if souscripteur.actif %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Actif
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Inactif
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button data-action="edit"
+                                            data-id="{{ souscripteur.id }}"
+                                            data-raison-sociale="{{ souscripteur.raison_sociale }}"
+                                            data-forme-juridique="{{ souscripteur.forme_juridique }}"
+                                            data-rccm="{{ souscripteur.rccm|default:'' }}"
+                                            data-ifu="{{ souscripteur.ifu|default:'' }}"
+                                            data-siege-social="{{ souscripteur.siege_social }}"
+                                            data-nom-representant="{{ souscripteur.nom_representant }}"
+                                            data-prenom-representant="{{ souscripteur.prenom_representant }}"
+                                            data-fonction-representant="{{ souscripteur.fonction_representant }}"
+                                            data-telephone="{{ souscripteur.telephone }}"
+                                            data-email="{{ souscripteur.email }}"
+                                            data-pays="{{ souscripteur.pays }}"
+                                            data-region="{{ souscripteur.region }}"
+                                            data-ville="{{ souscripteur.ville }}"
+                                            data-adresse="{{ souscripteur.adresse }}"
+                                            data-actif="{{ souscripteur.actif|yesno:'true,false' }}"
+                                            class="flex items-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-sm hover:bg-indigo-200">
+                                        <i class="fas fa-edit mr-1"></i>
+                                        <span class="text-xs">Éditer</span>
+                                    </button>
+                                    
+                                    <button data-action="view"
+                                            data-id="{{ souscripteur.id }}"
+                                            data-type-souscripteur="{{ souscripteur.type_souscripteur.nom }}"
+                                            data-raison-sociale="{{ souscripteur.raison_sociale }}"
+                                            data-forme-juridique="{{ souscripteur.get_forme_juridique_display }}"
+                                            data-rccm="{{ souscripteur.rccm|default:'-' }}"
+                                            data-ifu="{{ souscripteur.ifu|default:'-' }}"
+                                            data-siege-social="{{ souscripteur.siege_social }}"
+                                            data-nom-representant="{{ souscripteur.nom_representant }}"
+                                            data-prenom-representant="{{ souscripteur.prenom_representant }}"
+                                            data-fonction-representant="{{ souscripteur.fonction_representant }}"
+                                            data-telephone="{{ souscripteur.telephone }}"
+                                            data-email="{{ souscripteur.email }}"
+                                            data-pays="{{ souscripteur.pays }}"
+                                            data-region="{{ souscripteur.region }}"
+                                            data-ville="{{ souscripteur.ville }}"
+                                            data-adresse="{{ souscripteur.adresse }}"
+                                            class="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-sm hover:bg-blue-200">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        <span class="text-xs">Voir</span>
+                                    </button>
+
+                                    <button data-action="delete"
+                                            data-id="{{ souscripteur.id }}"
+                                            data-nom="{{ souscripteur.raison_sociale }}"
+                                            class="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-sm hover:bg-red-200">
+                                        <i class="fas fa-trash mr-1"></i>
+                                        <span class="text-xs">Supprimer</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Affichage de {{ souscripteurs.start_index }} à {{ souscripteurs.end_index }} sur {{ souscripteurs.paginator.count }} souscripteurs moraux
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if souscripteurs.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ souscripteurs.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700">
+                    Page {{ souscripteurs.number }} sur {{ souscripteurs.paginator.num_pages }}
+                </span>
+
+                {% if souscripteurs.has_next %}
+                    <a href="?page={{ souscripteurs.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ souscripteurs.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Modal Ajout -->
+        <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Ajouter un souscripteur moral</h3>
+                    <form id="addForm" method="POST" action="{% url 'tableau_administration:ajouter_souscripteur_moral' %}">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Type de souscripteur</label>
+                                <input type="text" 
+                                       value="Personne Morale" 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md bg-gray-50" 
+                                       readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Raison Sociale</label>
+                                <input type="text" name="raison_sociale" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Forme Juridique</label>
+                                <select name="forme_juridique" required 
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    <option value="">Sélectionner...</option>
+                                    {% for code, label in FORME_JURIDIQUE_CHOICES %}
+                                        <option value="{{ code }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">RCCM</label>
+                                <input type="text" name="rccm" 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">IFU</label>
+                                <input type="text" name="ifu" 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Siège Social</label>
+                                <input type="text" name="siege_social" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nom du Représentant</label>
+                                <input type="text" name="nom_representant" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prénom du Représentant</label>
+                                <input type="text" name="prenom_representant" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Fonction du Représentant</label>
+                                <input type="text" name="fonction_representant" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+                                <input type="tel" name="telephone" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" name="email" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Pays</label>
+                                <select name="pays" required 
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    <option value="">Sélectionner...</option>
+                                    {% for code, pays in PAYS_CHOICES %}
+                                        <option value="{{ code }}">{{ pays }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Région</label>
+                                <input type="text" name="region" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Ville</label>
+                                <input type="text" name="ville" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Adresse</label>
+                                <textarea name="adresse" rows="2" required
+                                          class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-5 flex justify-end gap-4">
+                            <button type="button" onclick="closeAddModal()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Annuler
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Ajouter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Édition -->
+        <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier un souscripteur moral</h3>
+                    <form id="editForm" method="POST">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Type de souscripteur</label>
+                                <input type="text" 
+                                       value="Personne Morale" 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md bg-gray-50" 
+                                       readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Raison Sociale</label>
+                                <input type="text" name="raison_sociale" id="edit_raison_sociale" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Forme Juridique</label>
+                                <select name="forme_juridique" id="edit_forme_juridique" required 
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    {% for code, label in FORME_JURIDIQUE_CHOICES %}
+                                        <option value="{{ code }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">RCCM</label>
+                                <input type="text" name="rccm" id="edit_rccm" 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">IFU</label>
+                                <input type="text" name="ifu" id="edit_ifu" 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Siège Social</label>
+                                <input type="text" name="siege_social" id="edit_siege_social" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nom du Représentant</label>
+                                <input type="text" name="nom_representant" id="edit_nom_representant" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prénom du Représentant</label>
+                                <input type="text" name="prenom_representant" id="edit_prenom_representant" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Fonction du Représentant</label>
+                                <input type="text" name="fonction_representant" id="edit_fonction_representant" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+                                <input type="tel" name="telephone" id="edit_telephone" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" name="email" id="edit_email" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Pays</label>
+                                <select name="pays" id="edit_pays" required 
+                                        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    {% for code, pays in PAYS_CHOICES %}
+                                        <option value="{{ code }}">{{ pays }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Région</label>
+                                <input type="text" name="region" id="edit_region" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Ville</label>
+                                <input type="text" name="ville" id="edit_ville" required 
+                                       class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Adresse</label>
+                                <textarea name="adresse" id="edit_adresse" rows="2" required
+                                          class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea>
+                            </div>
+                            <div class="col-span-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" name="is_active" id="edit_actif" 
+                                           class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                    <label class="ml-2 block text-sm text-gray-900">Souscripteur actif</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 flex justify-end gap-4">
+                            <button type="button" onclick="closeEditModal()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Annuler
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Vue -->
+        <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Détails du souscripteur moral</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Type de souscripteur</label>
+                            <p id="view_type" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Raison Sociale</label>
+                            <p id="view_raison_sociale" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Forme Juridique</label>
+                            <p id="view_forme_juridique" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">RCCM</label>
+                            <p id="view_rccm" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">IFU</label>
+                            <p id="view_ifu" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Siège Social</label>
+                            <p id="view_siege_social" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nom du Représentant</label>
+                            <p id="view_nom_representant" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Prénom du Représentant</label>
+                            <p id="view_prenom_representant" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Fonction du Représentant</label>
+                            <p id="view_fonction_representant" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+                            <p id="view_telephone" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <p id="view_email" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Pays</label>
+                            <p id="view_pays" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Région</label>
+                            <p id="view_region" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Ville</label>
+                            <p id="view_ville" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Adresse</label>
+                            <p id="view_adresse" class="mt-1 text-sm text-gray-900"></p>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button onclick="closeViewModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Suppression -->
+        <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer un souscripteur moral</h3>
+                    <p class="text-gray-600">Êtes-vous sûr de vouloir supprimer le souscripteur <span id="delete_souscripteur_name" class="font-semibold"></span> ?</p>
+                    <div class="mt-5 flex justify-end gap-4">
+                        <button onclick="closeDeleteModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Annuler
+                        </button>
+                        <button onclick="confirmDelete()" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {% include 'tableau_administration/footer.html' %}
+
+    <script>
+        let currentSouscripteurId = null;
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        function openEditModal(data) {
+            currentSouscripteurId = data.id;
+            const form = document.getElementById('editForm');
+            form.action = `{% url 'tableau_administration:modifier_souscripteur_moral' 0 %}`.replace('0', data.id);
+            
+            document.getElementById('edit_raison_sociale').value = data.raisonSociale || '';
+            document.getElementById('edit_forme_juridique').value = data.formeJuridique || '';
+            document.getElementById('edit_rccm').value = data.rccm || '';
+            document.getElementById('edit_ifu').value = data.ifu || '';
+            document.getElementById('edit_siege_social').value = data.siegeSocial || '';
+            document.getElementById('edit_nom_representant').value = data.nomRepresentant || '';
+            document.getElementById('edit_prenom_representant').value = data.prenomRepresentant || '';
+            document.getElementById('edit_fonction_representant').value = data.fonctionRepresentant || '';
+            document.getElementById('edit_telephone').value = data.telephone || '';
+            document.getElementById('edit_email').value = data.email || '';
+            document.getElementById('edit_pays').value = data.pays || '';
+            document.getElementById('edit_region').value = data.region || '';
+            document.getElementById('edit_ville').value = data.ville || '';
+            document.getElementById('edit_adresse').value = data.adresse || '';
+            document.getElementById('edit_actif').checked = data.actif === 'true';
+            
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function openViewModal(data) {
+            document.getElementById('view_type').textContent = data.typeSouscripteur || 'Non spécifié';
+            document.getElementById('view_raison_sociale').textContent = data.raisonSociale || 'Non spécifié';
+            document.getElementById('view_forme_juridique').textContent = data.formeJuridique || 'Non spécifié';
+            document.getElementById('view_rccm').textContent = data.rccm || 'Non spécifié';
+            document.getElementById('view_ifu').textContent = data.ifu || 'Non spécifié';
+            document.getElementById('view_siege_social').textContent = data.siegeSocial || 'Non spécifié';
+            document.getElementById('view_nom_representant').textContent = data.nomRepresentant || 'Non spécifié';
+            document.getElementById('view_prenom_representant').textContent = data.prenomRepresentant || 'Non spécifié';
+            document.getElementById('view_fonction_representant').textContent = data.fonctionRepresentant || 'Non spécifié';
+            document.getElementById('view_telephone').textContent = data.telephone || 'Non spécifié';
+            document.getElementById('view_email').textContent = data.email || 'Non spécifié';
+            document.getElementById('view_pays').textContent = data.pays || 'Non spécifié';
+            document.getElementById('view_region').textContent = data.region || 'Non spécifié';
+            document.getElementById('view_ville').textContent = data.ville || 'Non spécifié';
+            document.getElementById('view_adresse').textContent = data.adresse || 'Non spécifié';
+            
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        function openDeleteModal(data) {
+            currentSouscripteurId = data.id;
+            document.getElementById('delete_souscripteur_name').textContent = data.nom;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        function confirmDelete() {
+            if (currentSouscripteurId) {
+                window.location.href = `{% url 'tableau_administration:supprimer_souscripteur_moral' 0 %}`.replace('0', currentSouscripteurId);
+            }
+        }
+
+        // Gestion des clics sur les boutons d'action
+        document.addEventListener('click', function(e) {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const data = {
+                id: button.dataset.id,
+                typeSouscripteur: button.dataset.typeSouscripteur,
+                raisonSociale: button.dataset.raisonSociale,
+                formeJuridique: button.dataset.formeJuridique,
+                rccm: button.dataset.rccm,
+                ifu: button.dataset.ifu,
+                siegeSocial: button.dataset.siegeSocial,
+                nomRepresentant: button.dataset.nomRepresentant,
+                prenomRepresentant: button.dataset.prenomRepresentant,
+                fonctionRepresentant: button.dataset.fonctionRepresentant,
+                telephone: button.dataset.telephone,
+                email: button.dataset.email,
+                pays: button.dataset.pays,
+                region: button.dataset.region,
+                ville: button.dataset.ville,
+                adresse: button.dataset.adresse,
+                actif: button.dataset.actif,
+                nom: button.dataset.nom
+            };
+
+            switch(action) {
+                case 'edit':
+                    openEditModal(data);
+                    break;
+                case 'view':
+                    openViewModal(data);
+                    break;
+                case 'delete':
+                    openDeleteModal(data);
+                    break;
+            }
+        });
+
+        // Fermeture des modaux en cliquant en dehors
+        window.onclick = function(event) {
+            const modals = [
+                document.getElementById('addModal'),
+                document.getElementById('editModal'),
+                document.getElementById('viewModal'),
+                document.getElementById('deleteModal')
+            ];
+            
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+
+        // Gestion des messages toast
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast-message');
+            
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

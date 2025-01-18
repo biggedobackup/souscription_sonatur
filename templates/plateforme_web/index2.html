@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonatur Burkina - Terrains à Vendre</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <style>
+        .geometric-bg {
+            background-image: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            opacity: 0.1;
+        }
+    </style>
+</head>
+<body class="font-sans bg-green-50">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white/90 backdrop-blur-lg shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="layout-grid" class="w-8 h-8 text-green-700"></i>
+                    <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-800">SONATUR</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#accueil" class="text-green-700 hover:text-green-500 transition flex items-center space-x-1">
+                        <i data-lucide="home" class="w-4 h-4"></i>
+                        <span>Accueil</span>
+                    </a>
+                    <a href="#terrains" class="text-green-700 hover:text-green-500 transition flex items-center space-x-1">
+                        <i data-lucide="map" class="w-4 h-4"></i>
+                        <span>Terrains</span>
+                    </a>
+                    <a href="#services" class="text-green-700 hover:text-green-500 transition flex items-center space-x-1">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>Services</span>
+                    </a>
+                    <a href="#contact" class="text-green-700 hover:text-green-500 transition flex items-center space-x-1">
+                        <i data-lucide="mail" class="w-4 h-4"></i>
+                        <span>Contact</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="min-h-screen relative overflow-hidden flex items-center">
+        <div class="absolute inset-0 geometric-bg"></div>
+        <div class="container mx-auto px-6 py-24 relative">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2" data-aos="fade-right">
+                    <h1 class="text-5xl md:text-7xl font-bold text-green-800 mb-8">
+                        Votre Terrain <br>
+                        <span class="text-brown-700">Votre Avenir</span>
+                    </h1>
+                    <div class="flex space-x-4 mb-8">
+                        <div class="flex items-center space-x-2 text-green-700">
+                            <i data-lucide="check-circle" class="w-6 h-6"></i>
+                            <span>Sécurisé</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-green-700">
+                            <i data-lucide="shield" class="w-6 h-6"></i>
+                            <span>Légal</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-green-700">
+                            <i data-lucide="star" class="w-6 h-6"></i>
+                            <span>Premium</span>
+                        </div>
+                    </div>
+                    <button class="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-full hover:shadow-lg transition transform hover:translate-y-1 flex items-center space-x-2">
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        <span>Découvrir nos terrains</span>
+                    </button>
+                </div>
+                <div class="md:w-1/2 mt-12 md:mt-0 flex justify-center" data-aos="fade-left">
+                    <div class="relative w-64 h-64">
+                        <div class="absolute inset-0 bg-green-200 rounded-full animate-pulse"></div>
+                        <i data-lucide="home" class="w-32 h-32 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-700"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center text-brown-800 mb-16" data-aos="fade-up">
+                <i data-lucide="award" class="w-12 h-12 mb-4 mx-auto text-green-600"></i>
+                Services Premium
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div class="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300" data-aos="fade-up">
+                    <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-200 transition">
+                        <i data-lucide="layout" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-brown-800 mb-4">Terrains Viabilisés</h3>
+                    <p class="text-brown-600">Des parcelles prêtes à construire avec tous les équipements nécessaires.</p>
+                </div>
+                
+                <div class="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-200 transition">
+                        <i data-lucide="file-check" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-brown-800 mb-4">Documentation Garantie</h3>
+                    <p class="text-brown-600">Tous nos terrains sont légalement enregistrés avec une documentation complète.</p>
+                </div>
+
+                <div class="group bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-green-200 transition">
+                        <i data-lucide="users" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-brown-800 mb-4">Accompagnement</h3>
+                    <p class="text-brown-600">Une équipe dédiée pour vous guider à chaque étape de votre acquisition.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gradient-to-b from-green-50 to-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-2xl mx-auto" data-aos="fade-up">
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <div class="text-center mb-8">
+                        <i data-lucide="message-circle" class="w-16 h-16 text-green-600 mx-auto mb-4"></i>
+                        <h2 class="text-3xl font-bold text-brown-800">Contactez-nous</h2>
+                    </div>
+                    <form class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="relative">
+                                <i data-lucide="user" class="w-5 h-5 text-green-600 absolute left-3 top-3"></i>
+                                <input type="text" placeholder="Nom" class="w-full pl-10 pr-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:border-green-500">
+                            </div>
+                            <div class="relative">
+                                <i data-lucide="mail" class="w-5 h-5 text-green-600 absolute left-3 top-3"></i>
+                                <input type="email" placeholder="Email" class="w-full pl-10 pr-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:border-green-500">
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="message-square" class="w-5 h-5 text-green-600 absolute left-3 top-3"></i>
+                            <textarea placeholder="Message" rows="4" class="w-full pl-10 pr-4 py-3 rounded-xl border border-green-200 focus:outline-none focus:border-green-500"></textarea>
+                        </div>
+                        <button class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition flex items-center justify-center space-x-2">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                            <span>Envoyer le message</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-brown-900 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-lucide="layout-grid" class="w-8 h-8 text-green-400"></i>
+                        <span class="text-2xl font-bold">SONATUR</span>
+                    </div>
+                    <p class="text-brown-300">Votre partenaire de confiance pour l'acquisition de terrains au Burkina Faso.</p>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-4 flex items-center space-x-2">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-green-400"></i>
+                        <span>Contact</span>
+                    </h4>
+                    <div class="space-y-2 text-brown-300">
+                        <p class="flex items-center space-x-2">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                            <span>contact@sonatur.bf</span>
+                        </p>
+                        <p class="flex items-center space-x-2">
+                            <i data-lucide="phone" class="w-4 h-4"></i>
+                            <span>+226 XX XX XX XX</span>
+                        </p>
+                        <p class="flex items-center space-x-2">
+                            <i data-lucide="map" class="w-4 h-4"></i>
+                            <span>Ouagadougou, Burkina Faso</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xl font-semibold mb-4 flex items-center space-x-2">
+                        <i data-lucide="share-2" class="w-5 h-5 text-green-400"></i>
+                        <span>Suivez-nous</span>
+                    </h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-green-800/30 flex items-center justify-center hover:bg-green-700 transition">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-green-800/30 flex items-center justify-center hover:bg-green-700 transition">
+                            <i data-lucide="twitter" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-green-800/30 flex items-center justify-center hover:bg-green-700 transition">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        AOS.init({
+            duration: 1000,
+            once: true
+        });
+        lucide.createIcons();
+    </script>
+</body>
+</html>

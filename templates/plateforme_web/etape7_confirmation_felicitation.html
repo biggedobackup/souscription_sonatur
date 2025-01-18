@@ -1,0 +1,218 @@
+{% csrf_token %}
+<div x-show="etape === 7" 
+     x-init="
+        // Arrêter complètement le timer
+        document.dispatchEvent(new CustomEvent('stop-timer'));
+        localStorage.removeItem('timerActive');
+        localStorage.removeItem('timeLeft');
+        localStorage.removeItem('totalTime');
+        localStorage.removeItem('endTime');
+
+        // Récupération de toutes les données du localStorage
+        if (!souscriptionData.operation) {
+            souscriptionData.operation = JSON.parse(localStorage.getItem('operation'));
+        }
+        if (!souscriptionData.identification) {
+            souscriptionData.identification = JSON.parse(localStorage.getItem('identification'));
+        }
+        if (!souscriptionData.parcelle) {
+            souscriptionData.parcelle = JSON.parse(localStorage.getItem('parcelleChoisie'));
+        }
+        if (!souscriptionData.typeParcelle) {
+            souscriptionData.typeParcelle = JSON.parse(localStorage.getItem('typeParcelle'));
+        }
+        if (!souscriptionData.paiement) {
+            const paiementInfo = JSON.parse(localStorage.getItem('paiementInfo'));
+            if (paiementInfo && paiementInfo.numeroTransaction) {
+                souscriptionData.paiement = paiementInfo;
+            } else {
+                console.error('Numéro de transaction non trouvé dans le localStorage');
+            } 
+        }
+     "
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 transform scale-90"
+     x-transition:enter-end="opacity-100 transform scale-100"
+     class="max-w-2xl mx-auto" id="quittance-content">
+            <h2 class="text-3xl font-bold mb-6">Confirmation</h2>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="space-y-4">
+                    <!-- Icon de succès avec animation -->
+                    <div class="mx-auto w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mb-8 animate-bounce">
+                        <svg class="w-20 h-20 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" 
+                                  stroke-linejoin="round" 
+                                  stroke-width="2" 
+                                  d="M5 13l4 4L19 7"
+                                  class="animate-check">
+                            </path>
+                        </svg>
+                    </div>
+
+                    <!-- Message de félicitations -->
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4 animate-fade-in">Félicitations !</h2>
+                    <p class="text-xl text-gray-600 mb-8">
+                        Votre souscription a été effectuée avec succès.
+                    </p>
+
+                    <!-- Détails de la transaction -->
+                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                        <h3 class="font-bold text-xl mb-4">Récapitulatif de la transaction</h3>
+                        <div class="space-y-3">
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">N° Transaction:</span>
+                                <span class="font-medium" x-text="souscriptionData.paiement.numeroTransaction"></span>
+                            </p>
+                            
+                            <!-- Informations de l'opération -->
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Opération:</span>
+                                <span class="font-medium" x-text="souscriptionData.operation?.intitule"></span>
+                            </p>
+                            
+                            <!-- Informations du souscripteur -->
+                            <template x-if="souscriptionData.identification?.typePersonne === 'physique'">
+                                <div class="space-y-3">
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Nom complet:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.nom_complet"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Téléphone:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.telephone.replace(/(\d{2})(?=\d)/g, '$1 ')"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Email:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.email"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Document:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.document"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">N° Pièce:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.numero_piece"></span>
+                                    </p>
+                                </div>
+                            </template>
+                            
+                            <template x-if="souscriptionData.identification?.typePersonne === 'morale'">
+                                <div class="space-y-3">
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Raison Sociale:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.raison_sociale"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Représentant:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.nom_representant + ' ' + souscriptionData.identification?.prenom_representant"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Fonction:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.fonction_representant"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">RCCM:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.rccm.replace(/(\d{3})(?=\d)/g, '$1 ')"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">IFU:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.ifu.replace(/(\d{3})(?=\d)/g, '$1 ')"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Téléphone:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.telephone.replace(/(\d{2})(?=\d)/g, '$1 ')"></span>
+                                    </p>
+                                    <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                        <span class="text-gray-600">Email:</span>
+                                        <span class="font-medium" x-text="souscriptionData.identification?.email"></span>
+                                    </p>
+                                </div>
+                            </template>
+
+                            <!-- Informations de la parcelle -->
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Type de parcelle:</span>
+                                <span class="font-medium" x-text="souscriptionData.typeParcelle?.nom"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Code parcelle:</span>
+                                <span class="font-medium" x-text="souscriptionData.parcelle?.code"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Position:</span>
+                                <span class="font-medium" x-text="souscriptionData.parcelle?.position"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Surface:</span>
+                                <span class="font-medium" x-text="parseInt(souscriptionData.parcelle?.surface).toLocaleString('fr-FR') + ' m²'"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Prix au m²:</span>
+                                <span class="font-medium" x-text="parseInt(souscriptionData.parcelle?.coutUnitaire).toLocaleString('fr-FR') + ' FCFA'"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Prix total:</span>
+                                <span class="font-medium" x-text="parseInt(souscriptionData.parcelle?.prix).toLocaleString('fr-FR') + ' FCFA'"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Acompte:</span>
+                                <span class="font-medium text-blue-600" x-text="parseInt(souscriptionData.parcelle?.acompte).toLocaleString('fr-FR') + ' FCFA'"></span>
+                            </p>
+                            <template x-if="souscriptionData.parcelle?.resteAPayer">
+                                <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                    <span class="text-gray-600">Reste à payer:</span>
+                                    <span class="font-medium text-orange-600" x-text="parseInt(souscriptionData.parcelle?.resteAPayer).toLocaleString('fr-FR') + ' FCFA'"></span>
+                                </p>
+                            </template>
+
+                            <!-- Informations du paiement -->
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Frais de souscription:</span>
+                                <span class="font-medium text-green-600" x-text="parseInt(souscriptionData.operation?.montant_souscription).toLocaleString('fr-FR') + ' FCFA'"></span>
+                            </p>
+                            <p class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                <span class="text-gray-600">Date:</span>
+                                <span class="font-medium" x-text="new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                            </p>
+                        </div>
+                    </div>
+
+           
+                    <!-- Boutons d'action -->
+                    <div class="space-y-4">
+                        <button 
+                            onclick="generatePDF()"
+                            class="w-full sonatur-green sonatur-green-hover text-white py-3 px-4 rounded-lg text-lg font-medium flex items-center justify-center gap-2">
+                            <i class="fas fa-download"></i>
+                            <span>Télécharger la quittance PDF</span>
+                        </button>
+
+                        <button onclick="localStorage.clear(); window.location.href='/souscrire'" 
+                                class="w-full border border-gray-300 bg-white text-gray-700 py-3 px-4 rounded-lg text-lg hover:bg-gray-50">
+                            Souscrire à une autre parcelle
+                        </button>
+                    </div>
+
+                    <!-- Message supplémentaire -->
+                    <div class="mt-6 text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
+                        <p class="mt-2"><i class="fas fa-phone-alt mr-2"></i>Pour toute question, contactez notre service client au :</p>
+                        <p class="text-lg font-bold text-blue-600 mt-1">(+226) 25 30 73 07/08</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<script>
+function generatePDF() {
+    const paiement = JSON.parse(localStorage.getItem('paiementInfo')) || {};
+    const numeroTransaction = paiement.numeroTransaction;
+    
+    if (!numeroTransaction) {
+        alert('Numéro de transaction non trouvé');
+        return;
+    }
+
+    // Ouvrir le PDF dans un nouvel onglet
+    window.open(`/api/souscriptions/generate_pdf/${numeroTransaction}/`, '_blank');
+}
+</script>

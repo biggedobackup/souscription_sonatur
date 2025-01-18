@@ -1,0 +1,70 @@
+<br>
+<div x-show="etape === 2" class="max-w-2xl mx-auto">
+    <h2 class="text-2xl font-bold mb-6">Conditions de l'opération</h2>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="prose max-h-96 overflow-y-auto px-4" style="scrollbar-width: thin;">
+            <!-- Vérifier si une opération est sélectionnée -->
+            <template x-if="!souscriptionData.operation">
+                <p class="text-gray-500 text-center">Veuillez d'abord sélectionner une opération</p>
+            </template>
+
+            <!-- Afficher les conditions de l'opération sélectionnée -->
+            <template x-if="souscriptionData.operation">
+                <div>
+                    <div class="mb-6">
+                        <h3 class="text-xl font-bold text-green-800 mb-2" x-text="souscriptionData.operation.intitule"></h3>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Conditions de souscription -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-lg mb-2 text-green-700">
+                                <i class="fas fa-check-circle mr-2"></i>Conditions de souscription
+                            </h4>
+                            <div class="text-gray-600" x-html="souscriptionData.operation.condition.condition_souscription"></div>
+                        </div>
+
+                        <!-- Méthode d'attribution -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-lg mb-2 text-green-700">
+                                <i class="fas fa-random mr-2"></i>Méthode d'attribution
+                            </h4>
+                            <div class="text-gray-600" x-html="souscriptionData.operation.condition.methode_attribution"></div>
+                        </div>
+
+                        <!-- Documents requis -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-lg mb-2 text-green-700">
+                                <i class="fas fa-file-alt mr-2"></i>Documents requis
+                            </h4>
+                            <div class="text-gray-600" x-html="souscriptionData.operation.condition.documents_requis"></div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Bouton d'acceptation -->
+    <div class="mt-6">
+        <button @click="
+            if (!souscriptionData.operation) {
+                alert('Veuillez d\'abord sélectionner une opération');
+                return;
+            }
+            souscriptionData.conditions = {
+                acceptees: true,
+                date_acceptation: new Date().toISOString(),
+                operation_id: souscriptionData.operation.id
+            };
+            localStorage.setItem('conditions', JSON.stringify(souscriptionData.conditions));
+            localStorage.setItem('conditionsAccepted', 'true');
+            etape = 3;
+            maxEtape = Math.max(maxEtape, 3);
+            localStorage.setItem('currentEtape', 3);
+            localStorage.setItem('maxEtape', Math.max(maxEtape, 3))
+        " class="w-full sonatur-green sonatur-green-hover text-white py-2 px-4 rounded-lg">
+            <i class="fas fa-check mr-2"></i>J'ai lu et j'accepte les conditions de l'opération
+        </button>
+    </div>
+</div>

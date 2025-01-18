@@ -1,0 +1,417 @@
+<style>
+    .form-input,
+    .form-select,
+    .form-textarea {
+        height: 2.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.95rem;
+        border-width: 1px;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+        color: #374151;
+    }
+</style>
+
+
+<div x-show="etape === 3" class="max-w-2xl mx-auto" x-data="{ 
+    selectedType: null,
+    formData: {
+        // Personne physique
+        nom_complet: '',
+        telephone: '',
+        email: '',
+        date_naissance: '',
+        lieu_naissance: '',
+        profession: '',
+        genre: '',
+        document: '',
+        numero_piece: '',
+        date_expiration: '',
+        lieu_etablissement: '',
+        date_etablissement: '',
+        pays: '',
+        region: '',
+        ville: '',
+        adresse: '',
+
+        // Personne morale
+        raison_sociale: '',
+        forme_juridique: '',
+        rccm: '',
+        ifu: '',
+        siege_social: '',
+        nom_representant: '',
+        prenom_representant: '',
+        fonction_representant: ''
+    },
+
+    validateDates() {
+        // Validation date d'expiration > date d'établissement
+        if (this.formData.date_expiration && this.formData.date_etablissement) {
+            if (new Date(this.formData.date_expiration) <= new Date(this.formData.date_etablissement)) {
+                alert('La date d\'expiration doit être supérieure à la date d\'établissement');
+                this.formData.date_expiration = '';
+                return false;
+            }
+        }
+        return true;
+    },
+
+    validateAge() {
+        // Validation âge minimum 18 ans
+        if (this.formData.date_naissance) {
+            const birthDate = new Date(this.formData.date_naissance);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age < 18) {
+                alert('Vous devez avoir au moins 18 ans');
+                this.formData.date_naissance = '';
+                return false;
+            }
+        }
+        return true;
+    },
+
+    validateForm() {
+        if (this.selectedType === 'PHYSIQUE') {
+            const requiredFields = [
+                'nom_complet', 'telephone', 'email', 'date_naissance',
+                'lieu_naissance', 'profession', 'genre', 'document',
+                'numero_piece', 'date_expiration', 'lieu_etablissement',
+                'date_etablissement', 'pays', 'region', 'ville', 'adresse'
+            ];
+            
+            for (const field of requiredFields) {
+                if (!this.formData[field]) {
+                    alert(`Le champ ${field.replace('_', ' ')} est obligatoire`);
+                    return false;
+                }
+            }
+        } else {
+            const requiredFields = [
+                'raison_sociale', 'forme_juridique', 'rccm', 'ifu',
+                'siege_social', 'nom_representant', 'prenom_representant',
+                'fonction_representant', 'telephone', 'email', 'pays',
+                'region', 'ville', 'adresse'
+            ];
+            
+            for (const field of requiredFields) {
+                if (!this.formData[field]) {
+                    alert(`Le champ ${field.replace('_', ' ')} est obligatoire`);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}">
+    <h2 class="text-2xl font-bold mb-6">Identification</h2>
+
+    <!-- Sélection du type de souscripteur -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        {% for operation in operations %}
+            <div x-show="souscriptionData.operation && souscriptionData.operation.id === '{{ operation.id }}'">
+                <h3 class="text-lg font-medium mb-4">Sélectionnez votre type de souscripteur</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for type_souscripteur in operation.types_souscripteurs.all %}
+                        <button @click="selectedType = '{{ type_souscripteur.code }}'"
+                            :class="{
+                                'sonatur-green text-white': selectedType === '{{ type_souscripteur.code }}',
+                                'bg-gray-100 text-gray-700': selectedType !== '{{ type_souscripteur.code }}'
+                            }"
+                            class="p-4 rounded-lg flex items-center justify-center gap-3 transition-colors duration-200 hover:bg-opacity-90">
+                            <i class="fas {% if type_souscripteur.code == 'PHYSIQUE' %}fa-user{% else %}fa-building{% endif %} text-xl"></i>
+                            <span class="font-medium">{{ type_souscripteur.nom }}</span>
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <!-- Formulaires -->
+                <div class="mt-6">
+                    <!-- Formulaire Personne Physique -->
+                    <div x-show="selectedType === 'PHYSIQUE'" x-transition>
+                        <form @submit.prevent="if(validateDates() && validateAge()) { etape = 4; maxEtape = Math.max(maxEtape, 4) }"
+                            class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="md:col-span-2">
+                                    <label class="form-label block font-medium">Nom Complet*</label>
+                                    <input type="text" x-model="formData.nom_complet" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Date de naissance*</label>
+                                    <input type="date" x-model="formData.date_naissance" required
+                                        @change="validateAge()"
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Lieu de naissance*</label>
+                                    <input type="text" x-model="formData.lieu_naissance" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Profession*</label>
+                                    <input type="text" x-model="formData.profession" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Genre*</label>
+                                    <select x-model="formData.genre" required
+                                        class="form-select mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="M">Masculin</option>
+                                        <option value="F">Féminin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Type de Document*</label>
+                                    <select x-model="formData.document" required
+                                        class="form-select mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="CNIB">Carte Nationale d'Identité</option>
+                                        <option value="PASSEPORT">Passeport</option>
+                                        <option value="PERMIS_SEJOUR">Permis de Séjour</option>
+                                        <option value="CARTE_RESIDENT">Carte de Résident</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Numéro de la pièce*</label>
+                                    <input type="text" x-model="formData.numero_piece" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Lieu d'établissement*</label>
+                                    <input type="text" x-model="formData.lieu_etablissement" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Date d'établissement*</label>
+                                    <input type="date" x-model="formData.date_etablissement" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Date d'expiration*</label>
+                                    <input type="date" x-model="formData.date_expiration" required
+                                        @change="validateDates()"
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Pays*</label>
+                                    <select x-model="formData.pays" required
+                                        class="form-select mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="Burkina Faso">Burkina Faso</option>
+                                        <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                                        <option value="Mali">Mali</option>
+                                        <option value="Niger">Niger</option>
+                                        <option value="Sénégal">Sénégal</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Région*</label>
+                                    <input type="text" x-model="formData.region" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Ville*</label>
+                                    <input type="text" x-model="formData.ville" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Adresse*</label>
+                                    <input type="text" x-model="formData.adresse" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Téléphone*</label>
+                                    <input type="tel" x-model="formData.telephone" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Email*</label>
+                                    <input type="email" x-model="formData.email" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                            </div>
+                            <button type="submit" @click="
+                                if (!validateForm()) {
+                                    $event.preventDefault();
+                                    return;
+                                }
+                                if(validateDates() && validateAge()) {
+                                    // Sauvegarder les données du souscripteur
+                                    souscriptionData.identification = {
+                                        typePersonne: 'physique',
+                                        nom_complet: formData.nom_complet,
+                                        telephone: formData.telephone,
+                                        email: formData.email,
+                                        date_naissance: formData.date_naissance,
+                                        lieu_naissance: formData.lieu_naissance,
+                                        profession: formData.profession,
+                                        genre: formData.genre,
+                                        document: formData.document,
+                                        numero_piece: formData.numero_piece,
+                                        date_expiration: formData.date_expiration,
+                                        lieu_etablissement: formData.lieu_etablissement,
+                                        date_etablissement: formData.date_etablissement,
+                                        pays: formData.pays,
+                                        region: formData.region,
+                                        ville: formData.ville,
+                                        adresse: formData.adresse
+                                    };
+                                    localStorage.setItem('identification', JSON.stringify(souscriptionData.identification));
+                                    etape = 4;
+                                    maxEtape = Math.max(maxEtape, 4);
+                                    localStorage.setItem('currentEtape', 4);
+                                    localStorage.setItem('maxEtape', Math.max(maxEtape, 4))
+                                }
+                            " class="w-full sonatur-green sonatur-green-hover text-white py-2 px-4 rounded-lg mt-6">
+                                Continuer
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Formulaire Personne Morale -->
+                    <div x-show="selectedType === 'MORALE'" x-transition>
+                        <form @submit.prevent="etape = 4; maxEtape = Math.max(maxEtape, 4)"
+                            class="space-y-4">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="md:col-span-2">
+                                    <label class="form-label block font-medium">Raison sociale*</label>
+                                    <input type="text" x-model="formData.raison_sociale" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Forme juridique*</label>
+                                    <select x-model="formData.forme_juridique" required
+                                        class="form-select mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="SA">SA</option>
+                                        <option value="SARL">SARL</option>
+                                        <option value="SAS">SAS</option>
+                                        <option value="AUTRE">Autre</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">N° RCCM*</label>
+                                    <input type="text" x-model="formData.rccm" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">N° IFU*</label>
+                                    <input type="text" x-model="formData.ifu" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Siège social*</label>
+                                    <input type="text" x-model="formData.siege_social" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+
+                                <div class="md:col-span-2 pt-4 border-t">
+                                    <h3 class="text-lg font-medium mb-4">Représentant légal</h3>
+                                </div>
+
+                                <div>
+                                    <label class="form-label block font-medium">Nom du représentant*</label>
+                                    <input type="text" x-model="formData.nom_representant" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Prénom du représentant*</label>
+                                    <input type="text" x-model="formData.prenom_representant" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Fonction du représentant*</label>
+                                    <input type="text" x-model="formData.fonction_representant" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Téléphone*</label>
+                                    <input type="tel" x-model="formData.telephone" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Email*</label>
+                                    <input type="email" x-model="formData.email" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Pays*</label>
+                                    <select x-model="formData.pays" required
+                                        class="form-select mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="Burkina Faso">Burkina Faso</option>
+                                        <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                                        <option value="Mali">Mali</option>
+                                        <option value="Niger">Niger</option>
+                                        <option value="Sénégal">Sénégal</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Région*</label>
+                                    <input type="text" x-model="formData.region" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Ville*</label>
+                                    <input type="text" x-model="formData.ville" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                                <div>
+                                    <label class="form-label block font-medium">Adresse*</label>
+                                    <input type="text" x-model="formData.adresse" required
+                                        class="form-input mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200">
+                                </div>
+                            </div>
+                            <button type="submit" @click="
+                                if (!validateForm()) {
+                                    $event.preventDefault();
+                                    return;
+                                }
+                                // Sauvegarder les données du souscripteur
+                                souscriptionData.identification = {
+                                    typePersonne: 'morale',
+                                    raison_sociale: formData.raison_sociale,
+                                    forme_juridique: formData.forme_juridique,
+                                    rccm: formData.rccm,
+                                    ifu: formData.ifu,
+                                    siege_social: formData.siege_social,
+                                    nom_representant: formData.nom_representant,
+                                    prenom_representant: formData.prenom_representant,
+                                    fonction_representant: formData.fonction_representant,
+                                    telephone: formData.telephone,
+                                    email: formData.email,
+                                    pays: formData.pays,
+                                    region: formData.region,
+                                    ville: formData.ville,
+                                    adresse: formData.adresse
+                                };
+                                localStorage.setItem('identification', JSON.stringify(souscriptionData.identification));
+                                etape = 4;
+                                maxEtape = Math.max(maxEtape, 4);
+                                localStorage.setItem('currentEtape', 4);
+                                localStorage.setItem('maxEtape', Math.max(maxEtape, 4))
+                            " class="w-full sonatur-green sonatur-green-hover text-white py-2 px-4 rounded-lg mt-6">
+                                Continuer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Message si aucun type n'est sélectionné -->
+        <div x-show="!selectedType" class="text-center text-gray-500 mt-6">
+            Veuillez sélectionner un type de souscripteur pour continuer
+        </div>
+    </div>
+</div>

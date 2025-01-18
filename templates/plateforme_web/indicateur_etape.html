@@ -1,0 +1,184 @@
+<div class="mb-6 sm:mb-10">
+    <div class="flex justify-center items-center space-x-1 sm:space-x-4">
+        <!-- Étape 1 : Site -->
+        <div class="flex flex-col items-center">
+            <button @click="setEtape(1)" 
+                    class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 1 && !isFinalized,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape === 7 || isFinalized || maxEtape < 1,
+                        'sonatur-green text-white cursor-pointer hover:scale-105': maxEtape >= 1 && etape !== 1 && !isFinalized && etape !== 7
+                    }">1</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium" 
+                  :class="{ 
+                      'text-green-800': etape === 1 && !isFinalized && etape !== 7,
+                      'text-gray-500': etape === 7 || isFinalized 
+                  }">Site</span>
+        </div>
+        <div class="w-4 sm:w-16 h-0.5 sm:h-1 bg-gray-300 rounded" 
+             :class="{ 'sonatur-green': maxEtape >= 2 && !isFinalized && etape !== 7 }"></div>
+
+        <!-- Étape 2 : Conditions -->
+        <div class="flex flex-col items-center">
+            <button @click="setEtape(2)" 
+                    class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 2 && !isFinalized,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape === 7 || isFinalized || maxEtape < 2,
+                        'sonatur-green text-white cursor-pointer hover:scale-105': maxEtape >= 2 && etape !== 2 && !isFinalized && etape !== 7
+                    }">2</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium whitespace-nowrap" 
+                  :class="{ 
+                      'text-green-800': etape === 2 && !isFinalized && etape !== 7,
+                      'text-gray-500': etape === 7 || isFinalized 
+                  }">Conditions</span>
+        </div>
+        <div class="w-4 sm:w-16 h-0.5 sm:h-1 bg-gray-300 rounded" 
+             :class="{ 'sonatur-green': maxEtape >= 3 && !isFinalized && etape !== 7 }"></div>
+
+        <!-- Étape 3 : Identification -->
+        <div class="flex flex-col items-center">
+            <button @click="setEtape(3)" 
+                    class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 3 && !isFinalized,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape === 7 || isFinalized || maxEtape < 3,
+                        'sonatur-green text-white cursor-pointer hover:scale-105': maxEtape >= 3 && etape !== 3 && !isFinalized && etape !== 7
+                    }">3</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium whitespace-nowrap" 
+                  :class="{ 
+                      'text-green-800': etape === 3 && !isFinalized && etape !== 7,
+                      'text-gray-500': etape === 7 || isFinalized 
+                  }">Identification</span>
+        </div>
+        <div class="w-4 sm:w-16 h-0.5 sm:h-1 bg-gray-300 rounded" 
+             :class="{ 'sonatur-green': maxEtape >= 4 && !isFinalized && etape !== 7 }"></div>
+
+        <!-- Étape 4 : Type -->
+        <div class="flex flex-col items-center">
+            <button @click="setEtape(4)" 
+                    class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 4 && !isFinalized,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape === 7 || isFinalized || maxEtape < 4,
+                        'sonatur-green text-white cursor-pointer hover:scale-105': maxEtape >= 4 && etape !== 4 && !isFinalized && etape !== 7
+                    }">4</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium" 
+                  :class="{ 
+                      'text-green-800': etape === 4 && !isFinalized && etape !== 7,
+                      'text-gray-500': etape === 7 || isFinalized 
+                  }">Type</span>
+        </div>
+        <div class="w-4 sm:w-16 h-0.5 sm:h-1 bg-gray-300 rounded" 
+             :class="{ 'sonatur-green': maxEtape >= 5 && !isFinalized && etape !== 7 }"></div>
+
+        <!-- Étape 5 : Position -->
+        <div class="flex flex-col items-center">
+            <button @click="setEtape(5)" 
+                    class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 5 && !isFinalized,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape === 7 || isFinalized || maxEtape < 5,
+                        'sonatur-green text-white cursor-pointer hover:scale-105': maxEtape >= 5 && etape !== 5 && !isFinalized && etape !== 7
+                    }">5</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium" 
+                  :class="{ 
+                      'text-green-800': etape === 5 && !isFinalized && etape !== 7,
+                      'text-gray-500': etape === 7 || isFinalized 
+                  }">Position</span>
+        </div>
+        <div class="w-4 sm:w-16 h-0.5 sm:h-1 bg-gray-300 rounded" 
+             :class="{ 'sonatur-green': maxEtape >= 6 && !isFinalized && etape !== 7 }"></div>
+
+        <!-- Étape 6 : Paiement -->
+        <div class="flex flex-col items-center">
+            <button @click="setEtape(6)" 
+                    class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 6 && !isFinalized,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape === 7 || isFinalized || maxEtape < 6,
+                        'sonatur-green text-white cursor-pointer hover:scale-105': maxEtape >= 6 && etape !== 6 && !isFinalized && etape !== 7
+                    }">6</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium" 
+                  :class="{ 
+                      'text-green-800': etape === 6 && !isFinalized && etape !== 7,
+                      'text-gray-500': etape === 7 || isFinalized 
+                  }">Paiement</span>
+        </div>
+        <div class="w-4 sm:w-16 h-0.5 sm:h-1 bg-gray-300 rounded" 
+             :class="{ 'sonatur-green': maxEtape >= 7 && !isFinalized && etape !== 7 }"></div>
+
+        <!-- Étape 7 : Confirmation -->
+        <div class="flex flex-col items-center">
+            <button class="w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg transition-all duration-300" 
+                    :class="{ 
+                        'sonatur-green text-white animate-[pulse_0.7s_ease-in-out_infinite] scale-125': etape === 7,
+                        'bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-red-100 hover:text-red-600': etape !== 7
+                    }">7</button>
+            <span class="mt-1 sm:mt-2 text-[10px] sm:text-xs font-medium" 
+                  :class="{ 'text-green-800': etape === 7 }">Confirmation</span>
+        </div>
+    </div>
+</div>
+
+<!-- Boutons de navigation -->
+<div class="flex justify-between items-center mt-4 sm:mt-8 max-w-4xl mx-auto px-2 sm:px-0" x-data="{
+    canProceed() {
+        if (this.maxEtape > this.etape) {
+            return true;
+        }
+        switch(this.etape) {
+            case 1: return this.$root.siteSelected;
+            case 2: return this.$root.conditionsAccepted;
+            case 3: return this.$root.identificationValid;
+            case 4: return this.$root.typeSelected;
+            case 5: return this.$root.positionSelectionnee;
+            case 6: return this.$root.paiementValid;
+            default: return false;
+        }
+    }
+}">
+    <!-- Bouton Précédent -->
+    <button @click="etape > 1 ? etape-- : null"
+            x-show="etape !== 7"
+            :class="{
+                'opacity-50 cursor-not-allowed': etape === 1,
+                'sonatur-green sonatur-green-hover': etape !== 1
+            }"
+            class="px-3 sm:px-6 py-2 sm:py-3 text-white rounded-lg flex items-center transition-all duration-300 text-xs sm:text-base">
+        <i class="fas fa-arrow-left mr-1 sm:mr-2"></i>
+        Précédent
+    </button>
+
+    <!-- Messages d'erreur -->
+    <div class="text-center mx-2 sm:mx-4 hidden sm:block">
+        <div x-show="etape === 1 && !$root.siteSelected && maxEtape <= etape" 
+             class="text-red-600 text-xs sm:text-sm">
+            <i class="fas fa-exclamation-circle mr-1"></i>
+            Veuillez sélectionner un site
+        </div>
+        <!-- ... autres messages d'erreur ... -->
+    </div>
+
+    <!-- Bouton Suivant -->
+    <button @click="canProceed() ? (etape++, maxEtape = Math.max(maxEtape, etape)) : null"
+            :class="{
+                'sonatur-green sonatur-green-hover': canProceed() && etape < 7,
+                'opacity-50 cursor-not-allowed bg-gray-400': !canProceed() || etape >= 7,
+                'hidden': isFinalized
+            }"
+            class="px-3 sm:px-6 py-2 sm:py-3 text-white rounded-lg flex items-center transition-all duration-300 text-xs sm:text-base">
+        <span x-text="etape === 6 ? 'Finaliser' : 'Suivant'"></span>
+        <i class="fas fa-arrow-right ml-1 sm:ml-2"></i>
+    </button>
+</div>
+
+<style>
+.sonatur-green {
+    background-color: #2B6A39;
+}
+.sonatur-green-hover:hover {
+    background-color: #1e4c28;
+}
+</style>
+

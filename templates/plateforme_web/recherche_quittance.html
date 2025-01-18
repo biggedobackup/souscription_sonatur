@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de quittance - SONATUR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
+</head>
+<body class="bg-gray-50" x-data="{
+    numero_transaction: '',
+    erreur: null,
+    loading: false,
+    async handleSubmit(e) {
+        e.preventDefault();
+        if (this.numero_transaction) {
+            this.loading = true;
+            this.erreur = null;
+            try {
+                const response = await fetch(`/api/souscriptions/generate_pdf/${this.numero_transaction}/`);
+                if (response.ok) {
+                    window.open(`/api/souscriptions/generate_pdf/${this.numero_transaction}/`, '_blank');
+                } else {
+                    this.erreur = 'Quittance introuvable. Veuillez vérifier le numéro de transaction.';
+                }
+            } catch (error) {
+                this.erreur = 'Une erreur est survenue. Veuillez réessayer.';
+            } finally {
+                this.loading = false;
+            }
+        }
+    }
+}">
+    {% include 'plateforme_web/header.html' %}
+    <br><br><br>
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    Rechercher une quittance
+                </h2>
+                <p class="mt-4 text-lg text-gray-600">
+                    Entrez le numéro de transaction pour la consulter votre quittance
+                </p>
+            </div>
+
+            <div class="max-w-xl mx-auto">
+                <form @submit="handleSubmit" class="flex flex-col gap-4">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            placeholder="Numéro de transaction"
+                            class="w-full rounded-lg border-2 border-gray-300 py-3 px-4 pl-12 focus:border-emerald-500 focus:ring-emerald-500"
+                            x-model="numero_transaction"
+                            required
+                        />
+                        <i class="fas fa-search absolute left-4 top-3.5 h-5 w-5 text-gray-400"></i>
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full bg-emerald-600 text-white py-3 px-6 rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center"
+                        :disabled="loading"
+                    >
+                        <template x-if="loading">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="loading ? 'Recherche en cours...' : 'Rechercher'"></span>
+                    </button>
+                </form>
+
+                <!-- Message d'erreur -->
+                <template x-if="erreur">
+                    <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700" x-text="erreur"></p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="mt-6 text-center text-gray-600">
+                    <p>Le PDF s'ouvrira dans un nouvel onglet.</p>
+             
+                </div>
+            </div>
+        </div>
+    </section>
+    <br><br><br>
+    {% include 'plateforme_web/footer.html' %}
+</body>
+</html>

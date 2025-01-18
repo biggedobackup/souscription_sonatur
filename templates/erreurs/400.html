@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur 400 - Mauvaise Requête{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1>400</h1>
+        <h2>Mauvaise Requête</h2>
+        <p>Désolé, votre requête n'a pas pu être comprise par le serveur.</p>
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Revenir en arrière</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

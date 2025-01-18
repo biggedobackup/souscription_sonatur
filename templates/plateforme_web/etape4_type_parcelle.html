@@ -1,0 +1,45 @@
+<div x-show="etape === 4" class="max-w-4xl mx-auto">
+    <br><br>
+    <h2 class="text-2xl font-bold mb-6">Sélection du type de parcelle</h2>
+    
+    {% for operation in operations %}
+        <div x-show="souscriptionData.operation && souscriptionData.operation.id === '{{ operation.id }}'">
+            <div class="grid md:grid-cols-2 gap-6">
+                {% for type_parcelle in operation.types_parcelles.all %}
+                    <div class="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:border-2 hover:border-green-500">
+                        <h3 class="text-xl font-bold mb-3">{{ type_parcelle.nom }}</h3>
+                        <p class="text-sm text-gray-600 mb-4">{{ type_parcelle.description }}</p>
+                        
+                        <ul class="text-sm text-gray-600 mb-4">
+                            {% for caracteristique in type_parcelle.caracteristiques.all %}
+                                <li><i class="fas fa-check text-green-500 mr-2"></i>{{ caracteristique.description }}</li>
+                            {% endfor %}
+                        </ul>
+
+                        <button @click="
+                            souscriptionData.typeParcelle = {
+                                id: '{{ type_parcelle.id }}',
+                                code: '{{ type_parcelle.code }}',
+                                nom: '{{ type_parcelle.nom }}',
+                                description: '{{ type_parcelle.description }}'
+                            };
+                            localStorage.setItem('typeParcelle', JSON.stringify(souscriptionData.typeParcelle));
+                            localStorage.setItem('typeSelected', 'true');
+                            etape = 5;
+                            maxEtape = Math.max(maxEtape, 5);
+                            localStorage.setItem('currentEtape', 5);
+                            localStorage.setItem('maxEtape', Math.max(maxEtape, 5));
+                            $dispatch('type-parcelle-selected', { typeParcelleId: '{{ type_parcelle.id }}' })
+                        " class="w-full sonatur-green sonatur-green-hover text-white py-2 px-4 rounded-lg">
+                            Choisir ce type
+                        </button>
+                    </div>
+                {% empty %}
+                    <div class="col-span-2 text-center py-8">
+                        <p class="text-gray-500">Aucun type de parcelle disponible pour cette opération.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>

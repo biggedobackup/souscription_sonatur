@@ -1,0 +1,314 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Souscription Parcelles - SONATUR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
+</head>
+
+{% include 'plateforme_web/header.html' %}
+
+<body class="bg-gray-50" x-data="{ 
+    etape: parseInt(localStorage.getItem('currentEtape')) || 1, 
+    maxEtape: parseInt(localStorage.getItem('maxEtape')) || 1,
+    isFinalized: localStorage.getItem('isFinalized') === 'true' || false,
+    siteSelected: localStorage.getItem('siteSelected') === 'true' || false,
+    conditionsAccepted: localStorage.getItem('conditionsAccepted') === 'true' || false,
+    identificationValid: localStorage.getItem('identificationValid') === 'true' || false,
+    typeSelected: localStorage.getItem('typeSelected') === 'true' || false,
+    positionSelected: localStorage.getItem('positionSelected') === 'true' || false,
+    paiementValid: localStorage.getItem('paiementValid') === 'true' || false,
+    souscriptionData: {
+        operation: null,
+        conditions: null,
+        identification: null,
+        typeParcelle: null,
+        parcelle: null,
+        paiement: null
+    },
+    init() {
+        // Vérifier les paramètres d'URL pour le retour de paiement
+        const urlParams = new URLSearchParams(window.location.search);
+        const step = urlParams.get('step');
+        const payment = urlParams.get('payment');
+        
+        if (step === '7' && payment === 'success') {
+            // Exécuter immédiatement l'enregistrement de la souscription
+            const operation = JSON.parse(localStorage.getItem('operation'));
+            const identification = JSON.parse(localStorage.getItem('identification'));
+            const parcelle = JSON.parse(localStorage.getItem('parcelleChoisie'));
+            const typeParcelle = JSON.parse(localStorage.getItem('typeParcelle'));
+            const paiementInfo = JSON.parse(localStorage.getItem('paiementInfo'));
+
+            if (parcelle && parcelle.id) {
+                const paymentData = {
+                    identification: identification,
+                    parcelle: parcelle,
+                    typeParcelle: typeParcelle,
+                    operation: operation,
+                    paiement: paiementInfo
+                };
+
+                fetch(`/administration/enregistrer_souscription_et_paiement/${parcelle.id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(paymentData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('Souscription enregistrée avec succès');
+                        localStorage.setItem('souscriptionId', data.souscription_id);
+                        localStorage.setItem('souscripteurId', data.souscripteur_id);
+                        localStorage.setItem('paiementId', data.paiement_id);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+            }
+
+            // Mettre à jour l'étape et le localStorage
+            this.etape = 7;
+            this.maxEtape = Math.max(this.maxEtape, 7);
+            localStorage.setItem('currentEtape', 7);
+            localStorage.setItem('maxEtape', Math.max(this.maxEtape, 7));
+            localStorage.setItem('isFinalized', 'true');
+            
+            // Nettoyer l'URL
+            window.history.replaceState({}, document.title, '/souscrire');
+        }
+
+        // Récupération de toutes les données du localStorage au chargement
+        this.souscriptionData.operation = JSON.parse(localStorage.getItem('operation'));
+        this.souscriptionData.conditions = JSON.parse(localStorage.getItem('conditions'));
+        this.souscriptionData.identification = JSON.parse(localStorage.getItem('identification'));
+        this.souscriptionData.typeParcelle = JSON.parse(localStorage.getItem('typeParcelle'));
+        this.souscriptionData.parcelle = JSON.parse(localStorage.getItem('parcelleChoisie'));
+        this.souscriptionData.paiement = JSON.parse(localStorage.getItem('paiementInfo'));
+
+        // Vérification de la cohérence des données et de l'étape
+        if (this.etape > 1) {
+            if (!this.souscriptionData.operation) {
+                this.resetToStep(1);
+            } else if (this.etape > 2 && !this.souscriptionData.conditions) {
+                this.resetToStep(2);
+            } else if (this.etape > 3 && !this.souscriptionData.identification) {
+                this.resetToStep(3);
+            } else if (this.etape > 4 && !this.souscriptionData.typeParcelle) {
+                this.resetToStep(4);
+            } else if (this.etape > 5 && !this.souscriptionData.parcelle) {
+                this.resetToStep(5);
+            } else if (this.etape > 6 && !this.souscriptionData.paiement) {
+                this.resetToStep(6);
+            }
+        }
+
+        // Réappliquer le filtre des positions si on est à l'étape 5
+        if (this.etape === 5 && this.souscriptionData.typeParcelle) {
+            // Attendre que le DOM soit chargé
+            this.$nextTick(() => {
+                // Déclencher l'événement pour filtrer les positions
+                window.dispatchEvent(new CustomEvent('type-parcelle-selected', {
+                    detail: { typeParcelleId: this.souscriptionData.typeParcelle.id }
+                }));
+            });
+        }
+
+        // Empêcher le retour en arrière si on est à l'étape 7
+        if (this.etape === 7) {
+            window.history.pushState(null, '', window.location.href);
+            window.onpopstate = function(event) {
+                window.history.pushState(null, '', window.location.href);
+            };
+        }
+    },
+    resetToStep(step) {
+        this.etape = step;
+        this.maxEtape = step;
+        localStorage.setItem('currentEtape', step);
+        localStorage.setItem('maxEtape', step);
+    },
+    setEtape(nouvelleEtape) {
+        if (nouvelleEtape <= this.maxEtape && !this.isFinalized) {
+            this.etape = nouvelleEtape;
+            localStorage.setItem('currentEtape', nouvelleEtape);
+        }
+    },
+    typePersonne: 'physique',
+    formData: {
+        nom: '',
+        prenom: '',
+        dateNaissance: '',
+        lieuNaissance: '',
+        profession: '',
+        sexe: '',
+        nationalite: '',
+        typeDocument: '',
+        numeroPiece: '',
+        dateExpiration: '',
+        lieuEtablissement: '',
+        dateEtablissement: '',
+        raisonSociale: '',
+        formeJuridique: '',
+        rccm: '',
+        ifu: '',
+        siegeSocial: '',
+        nomRepresentant: '',
+        prenomRepresentant: '',
+        fonctionRepresentant: '',
+        telephoneEntreprise: '',
+        emailEntreprise: ''
+    },
+    numeroTransaction: 'TX-' + Date.now(),
+    isFinalized: false
+}">
+    <!-- Écran de chargement -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader-container">
+            <div class="relative">
+                <div class="loader"></div>
+                <img src="{% static 'images/logo.png' %}" alt="SONATUR" class="loader-logo">
+            </div>
+            <div class="loading-text">
+                Chargement en cours<span class="loading-dots"></span>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-16">
+        <!-- Étapes de progression -->
+        {% include 'plateforme_web/indicateur_etape.html' %}
+
+        <!-- Sélection du site -->
+        {% include 'plateforme_web/etape1_sites.html' %}
+
+        <!-- Conditions -->
+        {% include 'plateforme_web/etape2_accepter_condition.html' %}
+
+        <!-- Identification -->
+        {% include 'plateforme_web/etape3_identification_souscripteur.html' %}
+
+        <!-- Type de parcelle -->
+        {% include 'plateforme_web/etape4_type_parcelle.html' %}
+
+        <!-- Position parcelle -->
+        {% include 'plateforme_web/etape5_position_parcelle.html' %}
+
+        <!-- Inclure le timer uniquement pour l'étape 6 -->
+        <div x-show="etape === 6">
+            {% include 'plateforme_web/timer_component.html' %}
+        </div>
+
+        <!-- Paiement -->
+        {% include 'plateforme_web/etape6_paiement.html' %}
+
+        <!-- Confirmation et félicitations -->
+        {% include 'plateforme_web/etape7_confirmation_felicitation.html' %}
+    </main>
+
+    {% include 'plateforme_web/footer.html' %}
+
+    <!-- Styles personnalisés -->
+    <style>
+        @keyframes check {
+            from {
+                stroke-dasharray: 0 65;
+            }
+            to {
+                stroke-dasharray: 65 65;
+            }
+        }
+
+        .animate-check {
+            stroke-dasharray: 65;
+            animation: check 1s ease-in-out forwards;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scale-102 {
+            transform: scale(1.02);
+        }
+    </style>
+
+    <!-- Script de chargement amélioré -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingScreen = document.getElementById('loading-screen');
+            
+            // S'assurer que l'écran de chargement est visible au début
+            loadingScreen.style.display = 'flex';
+            loadingScreen.style.opacity = '1';
+
+            // Attendre que tout soit chargé
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }, 1500); // Réduit à 1.5 secondes pour une meilleure expérience utilisateur
+            });
+        });
+    </script>
+
+    <script>
+        // Empêcher la perte des données lors du rafraîchissement
+        window.addEventListener('beforeunload', function (e) {
+            if (localStorage.getItem('currentEtape') !== '7') {
+                // Ne rien faire si on est à l'étape 7
+                return;
+            }
+        });
+
+        // Gestionnaire pour l'expiration du timer
+        window.addEventListener('timer-expired', function(event) {
+            // Ne traiter l'expiration que si on est à l'étape 6
+            if (localStorage.getItem('currentEtape') === '6') {
+                const parcelleData = JSON.parse(localStorage.getItem('parcelleChoisie'));
+                if (parcelleData && parcelleData.id) {
+                    fetch(`/debloquer_parcelle/${parcelleData.id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log('Parcelle débloquée suite à l\'expiration du timer');
+                            localStorage.removeItem('parcelleChoisie');
+                            localStorage.removeItem('positionSelected');
+                            window.location.reload();
+                        }
+                    }).catch(error => {
+                        console.error('Erreur lors du déblocage de la parcelle:', error);
+                    });
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

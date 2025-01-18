@@ -1,0 +1,358 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Souscriptions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    {% include 'tableau_administration/header.html' %}
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des Souscriptions</h1>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="mb-6 max-w-md">
+            <form method="GET" class="flex gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               placeholder="Rechercher une souscription..." 
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 pl-7 text-sm">
+                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" 
+                        class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-search"></i>
+                    Rechercher
+                </button>
+                {% if search_query %}
+                <a href="{% url 'tableau_administration:liste_souscriptions' %}" 
+                   class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-times"></i>
+                    Réinitialiser
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if messages %}
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4">
+            {% for message in messages %}
+            <div class="toast-message transform transition-all duration-300 ease-out translate-x-0 opacity-100 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 
+                    {% if message.tags == 'success' %}text-green-500 bg-green-100
+                    {% elif message.tags == 'error' %}text-red-500 bg-red-100
+                    {% else %}text-blue-500 bg-blue-100{% endif %}
+                    rounded-lg">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation"></i>
+                    {% else %}
+                        <i class="fas fa-info"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tableau des souscriptions -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Transaction</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Souscripteur</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parcelle</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for souscription in souscriptions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscription.numero_transaction }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscription.date_souscription|date:"d/m/Y H:i" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if souscription.type_souscripteur.code == 'PHYSIQUE' %}
+                                    {{ souscription.nom_complet }}
+                                {% else %}
+                                    {{ souscription.raison_sociale }}
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscription.type_souscripteur }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if souscription.parcelle %}
+                                    <div class="text-sm">
+                                        <div class="font-medium text-gray-900">{{ souscription.parcelle.code }}</div>
+                                        <div class="text-gray-500">
+                                            Site: {{ souscription.parcelle.site }} | 
+                                            Zone: {{ souscription.parcelle.zone }} | 
+                                            Section: {{ souscription.parcelle.section }}
+                                        </div>
+                                        <div class="text-gray-500">
+                                          
+                                            Lot: {{ souscription.parcelle.lot }}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-gray-500">Non définie</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ souscription.montant_souscription|floatformat:0|intcomma }} FCFA</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if souscription.statut == 'confirme' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Confirmé
+                                </span>
+                                {% elif souscription.statut == 'en_attente' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    En attente
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Annulé
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="window.open('/api/souscriptions/generate_pdf/{{ souscription.numero_transaction }}/', '_blank')"
+                                            class="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-sm hover:bg-blue-200">
+                                        <i class="fas fa-file-pdf mr-1"></i>
+                                        <span class="text-xs">Quittance</span>
+                                    </button>
+                                    
+                                    <button data-action="view"
+                                            data-souscription="{{ souscription.id }}"
+                                            data-numero-transaction="{{ souscription.numero_transaction }}"
+                                            data-date-souscription="{{ souscription.date_souscription|date:'d/m/Y H:i' }}"
+                                            data-montant-souscription="{{ souscription.montant_souscription|floatformat:0|intcomma }}"
+                                            data-statut="{{ souscription.statut }}"
+                                            data-type-souscripteur="{{ souscription.type_souscripteur }}"
+                                            data-nom-souscripteur="{% if souscription.type_souscripteur.code == 'PHYSIQUE' %}{{ souscription.nom_complet }}{% else %}{{ souscription.raison_sociale }}{% endif %}"
+                                            data-telephone="{{ souscription.telephone }}"
+                                            data-email="{{ souscription.email }}"
+                                            data-reference-parcelle="{{ souscription.parcelle.code }}"
+                                            data-site-parcelle="{{ souscription.parcelle.site }}"
+                                            data-zone-parcelle="{{ souscription.parcelle.zone }}"
+                                            data-section-parcelle="{{ souscription.parcelle.section }}"
+                                            data-position-parcelle="{{ souscription.parcelle.position }}"
+                                            data-lot-parcelle="{{ souscription.parcelle.lot }}"
+                                            data-usage-parcelle="{{ souscription.parcelle.usage }}"
+                                            data-type-parcelle="{{ souscription.type_parcelle }}"
+                                            data-surface="{{ souscription.surface|floatformat:0 }}"
+                                            data-prix-total="{{ souscription.prix_total|floatformat:0|intcomma }}"
+                                            data-projet="{{ souscription.operation }}"
+                                            data-localite="{{ souscription.operation.projet.localite }}"
+                                            class="flex items-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-sm hover:bg-indigo-200">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        <span class="text-xs">Voir</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Affichage de {{ souscriptions.start_index }} à {{ souscriptions.end_index }} sur {{ souscriptions.paginator.count }} souscriptions
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if souscriptions.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ souscriptions.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700">
+                    Page {{ souscriptions.number }} sur {{ souscriptions.paginator.num_pages }}
+                </span>
+
+                {% if souscriptions.has_next %}
+                    <a href="?page={{ souscriptions.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ souscriptions.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Modal Vue -->
+        <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-2/3 shadow-lg rounded-md bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium">Détails de la souscription</h3>
+                    <button onclick="closeViewModal()" class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Informations de la souscription</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p><span class="font-medium">N° Transaction:</span> <span id="view_transaction"></span></p>
+                                <p><span class="font-medium">Date:</span> <span id="view_date"></span></p>
+                                <p><span class="font-medium">Montant:</span> <span id="view_montant"></span></p>
+                                <p><span class="font-medium">Statut:</span> <span id="view_statut"></span></p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Informations du souscripteur</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p><span class="font-medium">Type:</span> <span id="view_type_souscripteur"></span></p>
+                                <p><span class="font-medium">Nom:</span> <span id="view_nom_souscripteur"></span></p>
+                                <p><span class="font-medium">Téléphone:</span> <span id="view_telephone"></span></p>
+                                <p><span class="font-medium">Email:</span> <span id="view_email"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Informations de la parcelle</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p><span class="font-medium">Code:</span> <span id="view_reference"></span></p>
+                                <p><span class="font-medium">Site:</span> <span id="view_site"></span></p>
+                                <p><span class="font-medium">Zone:</span> <span id="view_zone"></span></p>
+                                <p><span class="font-medium">Section:</span> <span id="view_section"></span></p>
+                                <p><span class="font-medium">Position:</span> <span id="view_position"></span></p>
+                                <p><span class="font-medium">Lot:</span> <span id="view_lot"></span></p>
+                                <p><span class="font-medium">Usage:</span> <span id="view_type_parcelle"></span></p>
+                                <p><span class="font-medium">Surface:</span> <span id="view_surface"></span></p>
+                                <p><span class="font-medium">Prix total:</span> <span id="view_prix_total"></span></p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-2">Informations du projet</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p><span class="font-medium">Projet:</span> <span id="view_projet"></span></p>
+                                <p><span class="font-medium">Localité:</span> <span id="view_localite"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 flex justify-end">
+                    <button onclick="closeViewModal()" 
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {% include 'tableau_administration/footer.html' %}
+
+    <script>
+        function openViewModal(button) {
+            // Récupérer les données du bouton
+            const data = button.dataset;
+            
+            // Remplir les informations dans le modal
+            document.getElementById('view_transaction').textContent = data.numeroTransaction;
+            document.getElementById('view_date').textContent = data.dateSouscription;
+            document.getElementById('view_montant').textContent = data.montantSouscription.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + ' FCFA';
+            document.getElementById('view_statut').textContent = data.statut === 'True' ? 'Payé' : 'En attente';
+            
+            document.getElementById('view_type_souscripteur').textContent = data.typeSouscripteur;
+            document.getElementById('view_nom_souscripteur').textContent = data.nomSouscripteur;
+            document.getElementById('view_telephone').textContent = data.telephone;
+            document.getElementById('view_email').textContent = data.email;
+            
+            document.getElementById('view_reference').textContent = data.referenceParcelle;
+            document.getElementById('view_type_parcelle').textContent = data.usageParcelle;
+            document.getElementById('view_surface').textContent = data.surface + ' m²';
+            document.getElementById('view_prix_total').textContent = data.prixTotal.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + ' FCFA';
+            
+            document.getElementById('view_projet').textContent = data.projet;
+            document.getElementById('view_localite').textContent = data.localite;
+            
+            document.getElementById('view_site').textContent = data.siteParcelle;
+            document.getElementById('view_zone').textContent = data.zoneParcelle;
+            document.getElementById('view_section').textContent = data.sectionParcelle;
+            document.getElementById('view_position').textContent = data.positionParcelle;
+            document.getElementById('view_lot').textContent = data.lotParcelle;
+            
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        // Gestion des clics sur les boutons d'action
+        document.addEventListener('click', function(e) {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            if (action === 'view') {
+                openViewModal(button);
+            }
+        });
+
+        // Fermeture des modaux en cliquant en dehors
+        window.onclick = function(event) {
+            const modals = [document.getElementById('viewModal')];
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+
+        // Gestion des messages toast
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast-message');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>  

@@ -1,0 +1,570 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Projets</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    {% include 'tableau_administration/header.html' %}
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Gestion des Projets</h1>
+            <button onclick="openAddModal()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                Ajouter un projet
+            </button>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="mb-6 max-w-md">
+            <form method="GET" class="flex gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               placeholder="Rechercher un projet..." 
+                               class="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 pl-7 text-sm">
+                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" 
+                        class="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-search"></i>
+                    Rechercher
+                </button>
+                {% if search_query %}
+                <a href="{% url 'tableau_administration:liste_projets' %}" 
+                   class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition duration-200 flex items-center gap-1 text-sm">
+                    <i class="fas fa-times"></i>
+                    Réinitialiser
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if messages %}
+        <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4">
+            {% for message in messages %}
+            <div class="toast-message transform transition-all duration-300 ease-out translate-x-0 opacity-100 flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 
+                    {% if message.tags == 'success' %}text-green-500 bg-green-100
+                    {% elif message.tags == 'error' %}text-red-500 bg-red-100
+                    {% else %}text-blue-500 bg-blue-100{% endif %}
+                    rounded-lg">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-exclamation"></i>
+                    {% else %}
+                        <i class="fas fa-info"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tableau des projets -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Libellé</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localité</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date début</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date fin</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Superficie</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for projet in projets %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ projet.code }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ projet.libelle }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ projet.localite.nom }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ projet.date_debut|date:"d/m/Y H:i"|default:"-" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">{{ projet.date_fin|date:"d/m/Y H:i"|default:"-" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {{ projet.superficie_origine }} m² / {{ projet.superficie_viabilisee }} m²
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-col gap-1">
+                                    {% if projet.actif %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Actif
+                                    </span>
+                                    {% else %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Inactif
+                                    </span>
+                                    {% endif %}
+                                    {% if projet.archive %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        Archivé
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button data-action="edit"
+                                            data-projet="{{ projet.id }}"
+                                            data-code="{{ projet.code }}"
+                                            data-libelle="{{ projet.libelle }}"
+                                            data-description="{{ projet.description }}"
+                                            data-localite="{{ projet.localite.id }}"
+                                            data-date-debut="{% if projet.date_debut %}{{ projet.date_debut|date:'Y-m-d' }}{% endif %}"
+                                            data-date-fin="{% if projet.date_fin %}{{ projet.date_fin|date:'Y-m-d' }}{% endif %}"
+                                            data-superficie-origine="{{ projet.superficie_origine }}"
+                                            data-superficie-viabilisee="{{ projet.superficie_viabilisee }}"
+                                            data-actif="{{ projet.actif|yesno:'true,false' }}"
+                                            data-archive="{{ projet.archive|yesno:'true,false' }}"
+                                            class="flex items-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-sm hover:bg-indigo-200">
+                                        <i class="fas fa-edit mr-1"></i>
+                                        <span class="text-xs">Éditer</span>
+                                    </button>
+                                    
+                                    <button data-action="view"
+                                            data-projet="{{ projet.id }}"
+                                            data-code="{{ projet.code }}"
+                                            data-libelle="{{ projet.libelle }}"
+                                            data-description="{{ projet.description }}"
+                                            data-localite-nom="{{ projet.localite.nom }}"
+                                            data-date-debut="{{ projet.date_debut|date:'d/m/Y H:i' }}"
+                                            data-date-fin="{{ projet.date_fin|date:'d/m/Y H:i' }}"
+                                            data-superficie-origine="{{ projet.superficie_origine|default:0 }}"
+                                            data-superficie-viabilisee="{{ projet.superficie_viabilisee|default:0 }}"
+                                            class="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-sm hover:bg-blue-200">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        <span class="text-xs">Voir</span>
+                                    </button>
+                                    
+                                    <button data-action="delete"
+                                            data-projet="{{ projet.id }}"
+                                            data-libelle="{{ projet.libelle }}"
+                                            class="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-sm hover:bg-red-200">
+                                        <i class="fas fa-trash mr-1"></i>
+                                        <span class="text-xs">Supprimer</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Affichage de {{ projets.start_index }} à {{ projets.end_index }} sur {{ projets.paginator.count }} projets
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if projets.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ projets.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700">
+                    Page {{ projets.number }} sur {{ projets.paginator.num_pages }}
+                </span>
+
+                {% if projets.has_next %}
+                    <a href="?page={{ projets.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ projets.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Les modales (Ajout, Édition, Vue, Suppression) -->
+        <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-6 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-xl font-medium text-gray-900 mb-6">Ajouter un projet</h3>
+                    <form id="addForm" method="POST" action="{% url 'tableau_administration:ajouter_projet' %}">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <input type="text" name="code" required 
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Libellé</label>
+                                <input type="text" name="libelle" required 
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Localité</label>
+                                <select name="localite" required 
+                                        class="w-full px-3 py-2 border rounded-md">
+                                    <option value="">Sélectionnez une localité</option>
+                                    {% for localite in localites %}
+                                        <option value="{{ localite.id }}">{{ localite.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-span-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea name="description" rows="3" 
+                                          class="w-full px-3 py-2 border rounded-md"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                                <input type="date" name="date_debut"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                                <input type="date" name="date_fin"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Superficie d'origine (m²)</label>
+                                <input type="number" name="superficie_origine" step="0.01"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Superficie viabilisée (m²)</label>
+                                <input type="number" name="superficie_viabilisee" step="0.01"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                        </div>
+                        <div class="mt-5 flex justify-end gap-4">
+                            <button type="button" onclick="closeAddModal()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Annuler
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Ajouter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-6 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-xl font-medium text-gray-900 mb-6">Modifier un projet</h3>
+                    <form id="editForm" method="POST">
+                        {% csrf_token %}
+                        <div class="grid grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <input type="text" name="code" id="edit_code" required 
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Libellé</label>
+                                <input type="text" name="libelle" id="edit_libelle" required 
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Localité</label>
+                                <select name="localite" id="edit_localite" required 
+                                        class="w-full px-3 py-2 border rounded-md">
+                                    <option value="">Sélectionnez une localité</option>
+                                    {% for localite in localites %}
+                                        <option value="{{ localite.id }}">{{ localite.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-span-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea name="description" id="edit_description" rows="3" 
+                                          class="w-full px-3 py-2 border rounded-md"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                                <input type="date" name="date_debut" id="edit_date_debut"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                                <input type="date" name="date_fin" id="edit_date_fin"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Superficie d'origine (m²)</label>
+                                <input type="number" name="superficie_origine" id="edit_superficie_origine" step="0.01"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Superficie viabilisée (m²)</label>
+                                <input type="number" name="superficie_viabilisee" id="edit_superficie_viabilisee" step="0.01"
+                                       class="w-full px-3 py-2 border rounded-md">
+                            </div>
+                            <div class="col-span-3">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="is_active" id="edit_actif" 
+                                               class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                        <label class="ml-2 block text-sm text-gray-900">Projet actif</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="is_archive" id="edit_archive" 
+                                               class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                        <label class="ml-2 block text-sm text-gray-900">Archiver</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-5 flex justify-end gap-4">
+                            <button type="button" onclick="closeEditModal()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Annuler
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-6 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-xl font-medium text-gray-900 mb-6">Détails du projet</h3>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                            <p id="view_code" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Libellé</label>
+                            <p id="view_libelle" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Localité</label>
+                            <p id="view_localite" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div class="col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <p id="view_description" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                            <p id="view_date_debut" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                            <p id="view_date_fin" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Superficie d'origine</label>
+                            <p id="view_superficie_origine" class="text-sm text-gray-900"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Superficie viabilisée</label>
+                            <p id="view_superficie_viabilisee" class="text-sm text-gray-900"></p>
+                        </div>
+                    </div>
+                    <div class="mt-5 flex justify-end">
+                        <button onclick="closeViewModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer un projet</h3>
+                    <p class="text-gray-600">Êtes-vous sûr de vouloir supprimer le projet <span id="delete_projet_name" class="font-semibold"></span> ?</p>
+                    <div class="mt-5 flex justify-end gap-4">
+                        <button onclick="closeDeleteModal()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                            Annuler
+                        </button>
+                        <button onclick="confirmDelete()" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Script JavaScript -->
+        <script>
+            let currentProjetId = null;
+
+            function openAddModal() {
+                document.getElementById('addModal').classList.remove('hidden');
+            }
+
+            function closeAddModal() {
+                document.getElementById('addModal').classList.add('hidden');
+            }
+
+            function openEditModal(data) {
+                console.log('Données reçues dans openEditModal:', data); // Pour le débogage
+                
+                document.getElementById('edit_code').value = data.code || '';
+                document.getElementById('edit_libelle').value = data.libelle || '';
+                document.getElementById('edit_description').value = data.description || '';
+                document.getElementById('edit_localite').value = data.localite || '';
+                document.getElementById('edit_date_debut').value = data.dateDebut || '';
+                document.getElementById('edit_date_fin').value = data.dateFin || '';
+                document.getElementById('edit_superficie_origine').value = data['superficie-origine'] || '0';
+                document.getElementById('edit_superficie_viabilisee').value = data['superficie-viabilisee'] || '0';
+                document.getElementById('edit_actif').checked = data.actif === 'true';
+                document.getElementById('edit_archive').checked = data.archive === 'true';
+                
+                const form = document.getElementById('editForm');
+                form.action = `{% url 'tableau_administration:modifier_projet' 0 %}`.replace('0', data.projet);
+                
+                document.getElementById('editModal').classList.remove('hidden');
+            }
+
+            function closeEditModal() {
+                document.getElementById('editModal').classList.add('hidden');
+            }
+
+            function openViewModal(data) {
+                document.getElementById('view_code').textContent = data.code || 'Non spécifié';
+                document.getElementById('view_libelle').textContent = data.libelle || 'Non spécifié';
+                document.getElementById('view_description').textContent = data.description || 'Aucune description';
+                document.getElementById('view_localite').textContent = data.localiteNom || 'Non spécifié';
+                document.getElementById('view_date_debut').textContent = data.dateDebut || 'Non spécifié';
+                document.getElementById('view_date_fin').textContent = data.dateFin || 'Non spécifié';
+                document.getElementById('view_superficie_origine').textContent = (data['superficie-origine'] || 0) + ' m²';
+                document.getElementById('view_superficie_viabilisee').textContent = (data['superficie-viabilisee'] || 0) + ' m²';
+                
+                document.getElementById('viewModal').classList.remove('hidden');
+            }
+
+            function closeViewModal() {
+                document.getElementById('viewModal').classList.add('hidden');
+            }
+
+            function openDeleteModal(data) {
+                currentProjetId = data.projet;
+                document.getElementById('delete_projet_name').textContent = data.libelle;
+                document.getElementById('deleteModal').classList.remove('hidden');
+            }
+
+            function closeDeleteModal() {
+                document.getElementById('deleteModal').classList.add('hidden');
+            }
+
+            function confirmDelete() {
+                if (currentProjetId) {
+                    window.location.href = `{% url 'tableau_administration:supprimer_projet' 0 %}`.replace('0', currentProjetId);
+                }
+            }
+
+            // Gestion des clics sur les boutons d'action
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                const data = {
+                    projet: button.dataset.projet,
+                    code: button.dataset.code,
+                    libelle: button.dataset.libelle,
+                    description: button.dataset.description,
+                    localite: button.dataset.localite,
+                    localiteNom: button.dataset.localiteNom,
+                    dateDebut: button.dataset.dateDebut,
+                    dateFin: button.dataset.dateFin,
+                    'superficie-origine': button.dataset.superficieOrigine,
+                    'superficie-viabilisee': button.dataset.superficieViabilisee,
+                    actif: button.dataset.actif,
+                    archive: button.dataset.archive
+                };
+
+                console.log('Données récupérées:', data); // Pour le débogage
+
+                switch(action) {
+                    case 'edit':
+                        openEditModal(data);
+                        break;
+                    case 'view':
+                        openViewModal(data);
+                        break;
+                    case 'delete':
+                        openDeleteModal(data);
+                        break;
+                }
+            });
+
+            // Fermeture des modaux en cliquant en dehors
+            window.onclick = function(event) {
+                const modals = [
+                    document.getElementById('addModal'),
+                    document.getElementById('editModal'),
+                    document.getElementById('viewModal'),
+                    document.getElementById('deleteModal')
+                ];
+                
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Gestion des messages toast
+            document.addEventListener('DOMContentLoaded', function() {
+                const toasts = document.querySelectorAll('.toast-message');
+                
+                toasts.forEach(toast => {
+                    setTimeout(() => {
+                        toast.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 300);
+                    }, 5000);
+                });
+            });
+        </script>
+    </main>
+
+    {% include 'tableau_administration/footer.html' %}
+</body>
+</html> 

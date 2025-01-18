@@ -1,0 +1,283 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SONATUR - Société Nationale d'Aménagement des Terrains Urbains</title>
+  
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+{% include 'plateforme_web/header.html' %}
+
+<body class="bg-gray-50">
+
+    <!-- Hero Section -->
+    <section id="accueil">
+        <div class="relative isolate px-6 pt-14 lg:px-8">
+            <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+                <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-emerald-200 to-emerald-800 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] animate-pulse" style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%);">
+                </div>
+            </div>
+            <div class="mx-auto max-w-4xl py-32 sm:py-6">
+                <div class="text-center">
+                    <h1 class="text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-900 sm:text-7xl animate-fade-in">
+                        Société Nationale d'Aménagement des Terrains Urbains
+                    </h1>
+                    <p class="mt-8 text-xl leading-8 text-gray-600 animate-slide-up">
+                        Accédez à la propriété foncière en toute simplicité. Découvrez nos parcelles disponibles et souscrivez en ligne.
+                    </p>
+                    <div class="mt-12 flex items-center justify-center gap-x-6">
+                        <a onclick="localStorage.clear()"  href="{% url 'plateforme_web:souscrire' %}" class="group relative overflow-hidden rounded-full px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 transition-all duration-300 animate-bounce">
+                            <span class="relative z-10 inline-flex items-center">
+                                Souscrire maintenant 
+                                <i class="fas fa-arrow-right ml-2 h-5 w-5 animate-pulse"></i>
+                            </span>
+                            <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-pulse"></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="absolute top-1/2 left-10 w-32 h-32 bg-emerald-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div class="absolute top-1/3 right-10 w-32 h-32 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-emerald-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        </div>
+    </section>
+
+    <!-- À propos Section -->
+    <section id="apropos" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    À propos de SONATUR
+                </h2>
+                <p class="mt-4 text-lg text-gray-600">
+                    La Société Nationale d'Aménagement des Terrains Urbains (SONATUR) est un acteur clé dans le développement urbain au Burkina Faso.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-building h-6 w-6 text-emerald-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Notre Mission</h3>
+                    <p class="text-gray-600">
+                        Faciliter l'accès à la propriété foncière pour tous les Burkinabè à travers des solutions adaptées et durables.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-users h-6 w-6 text-emerald-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Notre Vision</h3>
+                    <p class="text-gray-600">
+                        Devenir le leader de l'aménagement urbain au Burkina Faso en offrant des solutions innovantes et accessibles.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-map-marker-alt h-6 w-6 text-emerald-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Notre Présence</h3>
+                    <p class="text-gray-600">
+                        Présents dans plusieurs villes du Burkina Faso avec des projets d'aménagement adaptés aux besoins locaux.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comment souscrire Section -->
+    <section id="comment-souscrire" class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    Comment souscrire ?
+                </h2>
+                <p class="mt-4 text-lg text-gray-600">
+                    Un processus simple et transparent pour accéder à votre produit
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                <div class="relative">
+                    <div class="hidden lg:block absolute top-12 left-1/2 w-full h-0.5 bg-emerald-200"></div>
+                    <div class="relative bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-clipboard-list h-6 w-6 text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Souscription en ligne</h3>
+                        <p class="text-gray-600">Remplissez les formulaires et choisissez votre parcelle.</p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="hidden lg:block absolute top-12 left-1/2 w-full h-0.5 bg-emerald-200"></div>
+                    <div class="relative bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-credit-card h-6 w-6 text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Paiement</h3>
+                        <p class="text-gray-600">Effectuez le paiement des frais de souscription.</p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="hidden lg:block absolute top-12 left-1/2 w-full h-0.5 bg-emerald-200"></div>
+                    <div class="relative bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-download h-6 w-6 text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Téléchargement</h3>
+                        <p class="text-gray-600">Téléchargez votre quittance de paiement.</p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="relative bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-user-check h-6 w-6 text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Prise en charge</h3>
+                        <p class="text-gray-600">Présentez-vous en agence pour finaliser le processus.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-16 max-w-5xl mx-auto">
+                <img 
+                    src="{% static 'images/home_process.jpeg' %}"
+                    alt="Processus d'attribution de parcelle"
+                    class="shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300 hover:scale-[1.02] transform" 
+                />
+            </div>
+        </div>
+    </section>
+
+    <!-- Pourquoi nous choisir Section -->
+    <section id="pourquoi-nous" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    Pourquoi nous choisir ?
+                </h2>
+                <p class="mt-4 text-lg text-gray-600">
+                    Des avantages uniques pour votre investissement immobilier
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 transform rotate-3 hover:rotate-6 transition-transform">
+                        <i class="fas fa-shield-halved text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Sécurité garantie</h3>
+                    <p class="text-gray-600">Tous nos terrains sont légalement enregistrés et sécurisés.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 transform -rotate-3 hover:-rotate-6 transition-transform">
+                        <i class="fas fa-bolt text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Processus rapide</h3>
+                    <p class="text-gray-600">Attribution de parcelle en moins de 30 jours.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 transform rotate-3 hover:rotate-6 transition-transform">
+                        <i class="fas fa-sack-dollar text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Prix abordables</h3>
+                    <p class="text-gray-600">Des tarifs adaptés à tous les budgets.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 transform -rotate-3 hover:-rotate-6 transition-transform">
+                        <i class="fas fa-medal text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Qualité assurée</h3>
+                    <p class="text-gray-600">Sites viabilisés et conformes aux normes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 bg-gradient-to-b from-gray-50 to-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Contactez-nous</h2>
+                <p class="text-lg text-gray-600">Nous sommes là pour vous aider et répondre à vos questions</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div class="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <div class="flex items-center mb-8">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-building text-2xl text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">Nos coordonnées</h3>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <i class="fas fa-map-marker-alt w-8 text-2xl text-emerald-600"></i>
+                            <span class="ml-4 text-gray-700">03 BP 7011 Ouagadougou 03</span>
+                        </div>
+                        <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <i class="fas fa-phone w-8 text-2xl text-emerald-600"></i>
+                            <span class="ml-4 text-gray-700">(+226) 25 30 73 07/08</span>
+                        </div>
+                        <div class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <i class="fas fa-envelope w-8 text-2xl text-emerald-600"></i>
+                            <span class="ml-4 text-gray-700">contact@sonatur.bf</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <div class="flex items-center mb-8">
+                        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-clock text-2xl text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900">Horaires d'ouverture</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-700">Lundi - Jeudi</span>
+                                <span class="text-emerald-600">07h30 - 12h30, 13h00 - 16h00</span>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-700">Vendredi</span>
+                                <span class="text-emerald-600">07h30 - 12h30, 13h30 - 16h30</span>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-700">Samedi - Dimanche</span>
+                                <span class="text-red-500">Fermé</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'plateforme_web/footer.html' %}
+</body>
+</html>

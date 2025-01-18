@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Erreur 403 - Accès Interdit{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1>403</h1>
+        <h2>Accès Interdit</h2>
+        <p>Vous n'avez pas la permission d'accéder à cette page.</p>
+        <div class="error-actions">
+            <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Revenir en arrière</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

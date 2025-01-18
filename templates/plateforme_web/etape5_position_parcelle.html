@@ -1,0 +1,224 @@
+{% load humanize %}
+
+<div x-show="etape === 5" class="max-w-4xl mx-auto" 
+     x-data="{ 
+         positionSelectionnee: null,
+         positions: [],
+         showPopup: false,
+         popupMessage: '',
+         errorMessage: '',
+         showError: false,
+         init() {
+             // Restaurer la position sélectionnée depuis le localStorage
+             const parcelleChoisie = JSON.parse(localStorage.getItem('parcelleChoisie'));
+             if (parcelleChoisie && parcelleChoisie.position) {
+                 this.positionSelectionnee = parcelleChoisie.position;
+             }
+         },
+         filterPositions(typeParcelleId) {
+             this.positions = Array.from(document.querySelectorAll('[data-type-parcelle]'))
+                 .filter(pos => pos.dataset.typeParcelle === typeParcelleId);
+             
+             if (!this.positionSelectionnee) {
+                 const parcelleChoisie = JSON.parse(localStorage.getItem('parcelleChoisie'));
+                 if (parcelleChoisie && parcelleChoisie.position) {
+                     this.positionSelectionnee = parcelleChoisie.position;
+                 }
+             }
+         },
+         selectParcelle(parcelleData) {
+             this.errorMessage = '';
+             this.showError = false;
+             souscriptionData.parcelle = parcelleData;
+             localStorage.setItem('parcelleChoisie', JSON.stringify(parcelleData));
+             localStorage.setItem('positionSelected', 'true');
+             etape = 6;
+             maxEtape = Math.max(maxEtape, 6);
+             localStorage.setItem('currentEtape', '6');
+             localStorage.setItem('maxEtape', '6');
+         },
+         closePopupAndRefresh() {
+             this.showPopup = false;
+             this.errorMessage = '';
+             this.showError = false;
+             window.location.reload();
+         },
+         handleError(message) {
+             this.errorMessage = message;
+             this.showError = true;
+             setTimeout(() => {
+                 this.showError = false;
+                 this.errorMessage = '';
+             }, 5000);
+         }
+     }"
+     @type-parcelle-selected.window="filterPositions($event.detail.typeParcelleId)">
+
+    <!-- Message d'erreur -->
+    <div x-show="showError" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-90"
+         class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-lg">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+            </div>
+            <div x-text="errorMessage"></div>
+            <button @click="showError = false" class="ml-auto">
+                <i class="fas fa-times text-red-500"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup de message -->
+    <div x-show="showPopup" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-lg p-6 max-w-md mx-4 relative"
+             @click.away="showPopup = false">
+            <button @click="showPopup = false" 
+                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="text-center">
+                <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                <p class="text-gray-800 mb-6" x-text="popupMessage"></p>
+                <button @click="closePopupAndRefresh()" 
+                        class="sonatur-green sonatur-green-hover text-white py-2 px-6 rounded-lg">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <h2 class="text-2xl font-bold mb-6">Sélection de la position</h2>
+    
+    {% for operation in operations %}
+        <div x-show="souscriptionData.operation && souscriptionData.operation.id === '{{ operation.id }}'">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <!-- Carte des positions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {% for position in operation.positions_parcelles.all %}
+                        <div class="border rounded-lg p-4 cursor-pointer hover:bg-green-50"
+                             :class="{'border-green-500 border-2': positionSelectionnee === '{{ position.id }}'}"
+                             @click="positionSelectionnee = '{{ position.id }}'"
+                             data-type-parcelle="{{ position.type_parcelle.id }}"
+                             x-show="positions.some(p => p.dataset.typeParcelle === '{{ position.type_parcelle.id }}')">
+                            <h3 class="font-bold">{{ position.nom }}</h3>
+                     
+                        </div>
+                    {% empty %}
+                        <div class="col-span-2 text-center py-4">
+                            <p class="text-gray-500">Aucune position disponible pour cette opération.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Liste des parcelles disponibles -->
+                <div class="mt-6" x-show="positionSelectionnee">
+                    <h3 class="font-bold mb-4">Parcelles disponibles pour la position sélectionnée</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for parcelle in operation.parcelles.all %}
+                            {% if parcelle.actif and not parcelle.paye %}
+                            <div x-show="positionSelectionnee === '{{ parcelle.position.id }}' && '{{ parcelle.usage.id }}' === souscriptionData.typeParcelle.id"
+                                 class="border-2 rounded-lg p-4 cursor-pointer {% if parcelle.bloquer %}border-red-300 bg-red-50{% else %}border-green-300 bg-green-50{% endif %} hover:border-green-500">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-bold">{{ parcelle.code }}</h4>
+                                    <div class="flex gap-2">
+                                        {% if parcelle.bloquer %}
+                                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                                                <i class="fas fa-lock mr-1"></i> Bloquée
+                                            </span>
+                                        {% elif parcelle.actif %}
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                                <i class="fas fa-check-circle mr-1"></i> Disponible
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="space-y-2">
+                                    <p class="text-gray-600">Type de parcelle: {{ parcelle.usage.nom }}</p>
+                                    <p class="text-gray-600">Position: {{ parcelle.position.nom }}</p>
+                                    <p class="text-gray-600">Section: {{ parcelle.section }}</p>
+                                    <p class="text-gray-600">Lot: {{ parcelle.lot }}</p>
+                                    <p class="text-gray-600">Parcelle: {{ parcelle.parcelle }}</p>
+                                    <p class="text-gray-600">Superficie: {{ parcelle.surface|intcomma }}m²</p>
+                                    <p class="text-gray-600">Coût/m²: {{ parcelle.cout_m2|floatformat:0|intcomma }} FCFA</p>
+                                    <p class="text-green-600 font-bold">Prix total: {{ parcelle.cout_total|floatformat:0|intcomma }} FCFA</p>
+                                    <p class="text-blue-600">Acompte: {{ parcelle.acompte|floatformat:0|intcomma }} FCFA</p>
+                                    {% if parcelle.reste_a_payer %}
+                                        <p class="text-orange-600">Reste à payer: {{ parcelle.reste_a_payer|floatformat:0|intcomma }} FCFA</p>
+                                    {% endif %}
+                                    {% if parcelle.bloquer %}
+                                        <p class="text-red-600 font-bold">Parcelle actuellement bloquée pour une souscription</p>
+                                    {% endif %}
+                                </div>
+                                <button @click.prevent="
+                                    {% if not parcelle.bloquer %}
+                                     fetch('/bloquer_parcelle/{{ parcelle.id }}/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': '{{ csrf_token }}'
+                                        }
+                                    }).then(response => {
+                                        if (!response.ok) {
+                                            return response.json().then(data => {
+                                                throw new Error(data.message || 'Une erreur est survenue lors du blocage de la parcelle');
+                                            });
+                                        }
+                                        return response.json();
+                                    }).then(data => {
+                                        if (data.success) {
+                                            selectParcelle({
+                                                id: '{{ parcelle.id }}',
+                                                code: '{{ parcelle.code }}',
+                                                section: '{{ parcelle.section }}',
+                                                lot: '{{ parcelle.lot }}',
+                                                numero: '{{ parcelle.parcelle }}',
+                                                surface: '{{ parcelle.surface }}',
+                                                coutUnitaire: '{{ parcelle.cout_m2 }}',
+                                                prix: '{{ parcelle.cout_total }}',
+                                                acompte: '{{ parcelle.acompte }}',
+                                                resteAPayer: '{{ parcelle.reste_a_payer|default:0 }}',
+                                                position: `{{ parcelle.position.nom|escapejs }}`,
+                                                typeParcelle: `{{ parcelle.usage.nom|escapejs }}`
+                                            });
+                                            $dispatch('start-timer', { duree: {{ operation.duree_souscription }} })
+                                        } else {
+                                            handleError(data.message || 'Une erreur est survenue lors de la sélection de la parcelle');
+                                        }
+                                    }).catch(error => {
+                                        handleError(error.message || 'Une erreur est survenue lors de la sélection de la parcelle');
+                                    });
+                                    {% endif %}
+                                " 
+                                class="mt-4 w-full sonatur-green sonatur-green-hover text-white py-2 px-4 rounded-lg"
+                                {% if parcelle.bloquer %}disabled{% endif %}
+                                :class="{'opacity-50 cursor-not-allowed': {{ parcelle.bloquer|yesno:'true,false' }}}">
+                                    {% if parcelle.bloquer %}
+                                        Parcelle non disponible
+                                    {% else %}
+                                        Sélectionner cette parcelle
+                                    {% endif %}
+                                </button>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                   
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
